@@ -1,0 +1,9 @@
+<Solution>
+  <Configurations>
+    <Platform Name="ARM64" />
+    <Platform Name="ARM64EC" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="KNSoft.Quic.vcxproj" Id="f2f9bd28-a706-4a22-a896-94bc9cc03815" />
+</Solution>
