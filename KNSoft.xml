@@ -5,12 +5,18 @@
       Order="9"
       xmlns="http://schemas.microsoft.com/build/2009/properties">
   <Rule.Categories>
+    <Category Name="Compiler" DisplayName="Compiler" />
     <Category Name="Linker" DisplayName="Linker" />
   </Rule.Categories>
 
   <Rule.DataSource>
     <DataSource Persistence="ProjectFile" HasConfigurationCondition="true" />
   </Rule.DataSource>
+
+  <BoolProperty Name="OptimizeGlobalData"
+                DisplayName="Optimize Global Data"
+                Description="Pass /Gw to compile global data into individual COMDAT sections."
+                Category="Compiler" />
 
   <BoolProperty Name="OmitCoffGroupInfo"
                 DisplayName="Omit COFF Group Information"

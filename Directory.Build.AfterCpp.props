@@ -5,6 +5,11 @@
         <PropertyPageSchema Include="$(MSBuildThisFileDirectory)KNSoft.xml" />
     </ItemGroup>
 
+    <!-- Enable global data optimization for Release static libraries by default -->
+    <PropertyGroup Condition="'$(Configuration)' == 'Release' and '$(ConfigurationType)' == 'StaticLibrary'">
+        <OptimizeGlobalData Condition="'$(OptimizeGlobalData)' == ''">true</OptimizeGlobalData>
+    </PropertyGroup>
+
     <!-- Release image metadata -->
     <PropertyGroup Condition="'$(Configuration)' == 'Release'">
         <OmitCoffGroupInfo Condition="'$(OmitCoffGroupInfo)' == ''">true</OmitCoffGroupInfo>
@@ -78,6 +83,19 @@
             <PreprocessorDefinitions>$(KnsoftAsmPredefined);%(PreprocessorDefinitions)</PreprocessorDefinitions>
         </MARMASM>
     </ItemDefinitionGroup>
+
+    <Target Name="KNSoftCustomizeCompilerOptions"
+            BeforeTargets="ClCompile"
+            Condition="'@(ClCompile)' != '' and '$(OptimizeGlobalData)' != ''">
+        <ItemGroup>
+            <ClCompile Update="@(ClCompile)" Condition="'$(OptimizeGlobalData)' == 'true'">
+                <AdditionalOptions>%(ClCompile.AdditionalOptions) /Gw</AdditionalOptions>
+            </ClCompile>
+            <ClCompile Update="@(ClCompile)" Condition="'$(OptimizeGlobalData)' != 'true'">
+                <AdditionalOptions>%(ClCompile.AdditionalOptions) /Gw-</AdditionalOptions>
+            </ClCompile>
+        </ItemGroup>
+    </Target>
 
     <Target Name="KNSoftCustomizeLinkerOptions"
             AfterTargets="ComputeLinkSwitches"
