@@ -1,10 +1,19 @@
 <Solution>
   <Configurations>
+    <BuildType Name="Debug" />
+    <BuildType Name="DebugMD" />
+    <BuildType Name="Release" />
+    <BuildType Name="ReleaseMD" />
     <Platform Name="ARM64" />
     <Platform Name="ARM64EC" />
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
-  <Project Path="KNSoft.Quic.Static/KNSoft.Quic.Static.vcxproj" Id="f2f9bd28-a706-4a22-a896-94bc9cc03815" />
-  <Project Path="KNSoft.Quic/KNSoft.Quic.vcxproj" Id="edaf7a96-77e2-4f69-83c3-9933e6c2b120" />
+  <Project Path="KNSoft.Quic.Static/KNSoft.Quic.Static.vcxproj" Id="f2f9bd28-a706-4a22-a896-94bc9cc03815">
+    <BuildType Solution="DebugMD|*" Project="Debug" />
+    <BuildType Solution="ReleaseMD|*" Project="Release" />
+  </Project>
+  <Project Path="KNSoft.Quic/KNSoft.Quic.vcxproj" Id="edaf7a96-77e2-4f69-83c3-9933e6c2b120">
+    <BuildDependency Project="KNSoft.Quic.Static/KNSoft.Quic.Static.vcxproj" />
+  </Project>
 </Solution>

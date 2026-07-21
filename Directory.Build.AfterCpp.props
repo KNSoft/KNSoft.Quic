@@ -5,13 +5,17 @@
         <PropertyPageSchema Include="$(MSBuildThisFileDirectory)KNSoft.xml" />
     </ItemGroup>
 
-    <!-- Enable global data optimization for Release static libraries by default -->
-    <PropertyGroup Condition="'$(Configuration)' == 'Release' and '$(ConfigurationType)' == 'StaticLibrary'">
-        <OptimizeGlobalData Condition="'$(OptimizeGlobalData)' == ''">true</OptimizeGlobalData>
+    <!-- Debug defaults -->
+    <PropertyGroup Condition="$(Configuration.Contains(`Debug`))">
+        <OptimizeGlobalData Condition="'$(OptimizeGlobalData)' == ''">false</OptimizeGlobalData>
+        <OmitCoffGroupInfo Condition="'$(OmitCoffGroupInfo)' == ''">false</OmitCoffGroupInfo>
+        <OmitRichHeader Condition="'$(OmitRichHeader)' == ''">false</OmitRichHeader>
     </PropertyGroup>
 
-    <!-- Release image metadata -->
-    <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <!-- Release defaults -->
+    <PropertyGroup Condition="$(Configuration.Contains(`Release`))">
+        <OptimizeGlobalData Condition="'$(OptimizeGlobalData)' == '' and '$(ConfigurationType)' == 'StaticLibrary'">true</OptimizeGlobalData>
+        <OptimizeGlobalData Condition="'$(OptimizeGlobalData)' == ''">false</OptimizeGlobalData>
         <OmitCoffGroupInfo Condition="'$(OmitCoffGroupInfo)' == ''">true</OmitCoffGroupInfo>
         <OmitRichHeader Condition="'$(OmitRichHeader)' == ''">true</OmitRichHeader>
     </PropertyGroup>
@@ -100,7 +104,7 @@
     <Target Name="KNSoftCustomizeLinkerOptions"
             AfterTargets="ComputeLinkSwitches"
             BeforeTargets="Link"
-            Condition="'@(Link)' != '' and '$(Configuration)' == 'Release'">
+            Condition="'@(Link)' != '' and $(Configuration.Contains(`Release`))">
         <ItemGroup>
             <Link Condition="'$(OmitCoffGroupInfo)' == 'true' and
                              '%(Link.LinkTimeCodeGeneration)' != 'PGInstrument' and
