@@ -5,5 +5,10 @@
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
-  <Project Path="KNSoft.Quic.vcxproj" Id="f2f9bd28-a706-4a22-a896-94bc9cc03815" />
+  <Project Path="KNSoft.Quic.Static.vcxproj" Id="f2f9bd28-a706-4a22-a896-94bc9cc03815" />
+  <Project Path="KNSoft.Quic.vcxproj" Id="edaf7a96-77e2-4f69-83c3-9933e6c2b120">
+    <BuildDependency Project="KNSoft.Quic.Static.vcxproj" />
+    <Platform Solution="Debug|ARM64" Project="x64" />
+    <Platform Solution="Debug|ARM64EC" Project="x64" />
+  </Project>
 </Solution>

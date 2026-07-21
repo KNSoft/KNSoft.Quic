@@ -4,15 +4,10 @@
 #define QUIC_BUILD_STATIC 1
 
 #if defined(_DEBUG)
-#define QUIC_EVENTS_STDOUT 1
-#define QUIC_LOGS_STDOUT 1
 #pragma warning(push)
 #pragma warning(disable:4996) /* Upstream stdout helper uses strdup. */
 #include "msquic/src/generated/stdout/quic_trace.c"
 #pragma warning(pop)
-#else
-#define QUIC_EVENTS_STUB 1
-#define QUIC_LOGS_STUB 1
 #endif
 
 /* Patch precomp.h */

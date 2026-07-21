@@ -3,9 +3,26 @@
 #define QUIC_API_ENABLE_INSECURE_FEATURES 1
 #define QUIC_API_ENABLE_PREVIEW_FEATURES 1
 
+#if defined(_DEBUG)
+#define QUIC_EVENTS_STDOUT 1
+#define QUIC_LOGS_STDOUT 1
+#else
+#define QUIC_EVENTS_STUB 1
+#define QUIC_LOGS_STUB 1
+#endif
+
 #include "msquic/src/inc/msquic.h"
 
 EXTERN_C_START
+
+#pragma push_macro("_IRQL_requires_max_")
+#if defined(KNSOFT_QUIC_BUILD) && defined(_WINDLL)
+#undef _IRQL_requires_max_
+#define _IRQL_requires_max_(x) __declspec(dllexport)
+#elif defined(KNSOFT_QUIC_DLL)
+#undef _IRQL_requires_max_
+#define _IRQL_requires_max_(x) __declspec(dllimport)
+#endif
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
 void
@@ -57,8 +74,11 @@ MsQuicRelease(
     void
     );
 
-_IRQL_requires_max_(PASSIVE_LEVEL)
-static FORCEINLINE QUIC_STATUS
+#pragma pop_macro("_IRQL_requires_max_")
+
+static
+FORCEINLINE
+QUIC_STATUS
 KNSoftQuicInitialize(
     void
     )
@@ -73,8 +93,9 @@ KNSoftQuicInitialize(
     return Status;
 }
 
-_IRQL_requires_max_(PASSIVE_LEVEL)
-static FORCEINLINE void
+static
+FORCEINLINE
+void
 KNSoftQuicUninitialize(
     void
     )
