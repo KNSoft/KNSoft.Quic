@@ -39,7 +39,6 @@
     <Keyword>Win32Proj</Keyword>
     <ProjectGuid>{edaf7a96-77e2-4f69-83c3-9933e6c2b120}</ProjectGuid>
     <RootNamespace>KNSoftQuic</RootNamespace>
-    <WindowsTargetPlatformVersion>$(_LatestWindowsTargetPlatformVersion)</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -101,32 +100,28 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IntDir>$(ProjectDir)IntDir\$(KnsoftArch)\$(Configuration)\$(ProjectName)\</IntDir>
-    <IncludePath>$(ProjectDir)msquic\src\inc;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)..\msquic\src\inc;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IntDir>$(ProjectDir)IntDir\$(KnsoftArch)\$(Configuration)\$(ProjectName)\</IntDir>
-    <IncludePath>$(ProjectDir)msquic\src\inc;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)..\msquic\src\inc;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IntDir>$(ProjectDir)IntDir\$(KnsoftArch)\$(Configuration)\$(ProjectName)\</IntDir>
-    <IncludePath>$(ProjectDir)msquic\src\inc;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)..\msquic\src\inc;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">
-    <IncludePath>$(ProjectDir)msquic\src\inc;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)..\msquic\src\inc;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
-    <IncludePath>$(ProjectDir)msquic\src\inc;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)..\msquic\src\inc;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IntDir>$(ProjectDir)IntDir\$(KnsoftArch)\$(Configuration)\$(ProjectName)\</IntDir>
-    <IncludePath>$(ProjectDir)msquic\src\inc;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)..\msquic\src\inc;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">
-    <IncludePath>$(ProjectDir)msquic\src\inc;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)..\msquic\src\inc;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
-    <IncludePath>$(ProjectDir)msquic\src\inc;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)..\msquic\src\inc;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -135,6 +130,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <AdditionalDependencies>$(OutDir)KNSoft.Quic.Static.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <ModuleDefinitionFile>$(ProjectName).def</ModuleDefinitionFile>
     </Link>
     <Manifest>
       <EnableSegmentHeap>true</EnableSegmentHeap>
@@ -149,6 +145,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <AdditionalDependencies>$(OutDir)KNSoft.Quic.Static.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <ModuleDefinitionFile>$(ProjectName).def</ModuleDefinitionFile>
     </Link>
     <Manifest>
       <EnableSegmentHeap>true</EnableSegmentHeap>
@@ -161,6 +158,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <AdditionalDependencies>$(OutDir)KNSoft.Quic.Static.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <ModuleDefinitionFile>$(ProjectName).def</ModuleDefinitionFile>
     </Link>
     <Manifest>
       <EnableSegmentHeap>true</EnableSegmentHeap>
@@ -173,6 +171,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <AdditionalDependencies>$(OutDir)KNSoft.Quic.Static.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <ModuleDefinitionFile>$(ProjectName).def</ModuleDefinitionFile>
     </Link>
     <Manifest>
       <EnableSegmentHeap>true</EnableSegmentHeap>
@@ -185,6 +184,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <AdditionalDependencies>$(OutDir)KNSoft.Quic.Static.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <ModuleDefinitionFile>$(ProjectName).def</ModuleDefinitionFile>
     </Link>
     <Manifest>
       <EnableSegmentHeap>true</EnableSegmentHeap>
@@ -199,6 +199,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <AdditionalDependencies>$(OutDir)KNSoft.Quic.Static.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <ModuleDefinitionFile>$(ProjectName).def</ModuleDefinitionFile>
     </Link>
     <Manifest>
       <EnableSegmentHeap>true</EnableSegmentHeap>
@@ -213,6 +214,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <AdditionalDependencies>$(OutDir)KNSoft.Quic.Static.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <ModuleDefinitionFile>$(ProjectName).def</ModuleDefinitionFile>
     </Link>
     <Manifest>
       <EnableSegmentHeap>true</EnableSegmentHeap>
@@ -227,16 +229,20 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <AdditionalDependencies>$(OutDir)KNSoft.Quic.Static.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <ModuleDefinitionFile>$(ProjectName).def</ModuleDefinitionFile>
     </Link>
     <Manifest>
       <EnableSegmentHeap>true</EnableSegmentHeap>
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="precomp.h" />
+    <ClCompile Include="DllMain.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="DllMain.c" />
+    <ClInclude Include="..\precomp.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="KNSoft.Quic.def" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -15,15 +15,6 @@
 
 EXTERN_C_START
 
-#pragma push_macro("_IRQL_requires_max_")
-#if defined(KNSOFT_QUIC_BUILD) && defined(_WINDLL)
-#undef _IRQL_requires_max_
-#define _IRQL_requires_max_(x) __declspec(dllexport)
-#elif defined(KNSOFT_QUIC_DLL)
-#undef _IRQL_requires_max_
-#define _IRQL_requires_max_(x) __declspec(dllimport)
-#endif
-
 _IRQL_requires_max_(DISPATCH_LEVEL)
 void
 QUIC_API
@@ -73,8 +64,6 @@ void
 MsQuicRelease(
     void
     );
-
-#pragma pop_macro("_IRQL_requires_max_")
 
 static
 FORCEINLINE
