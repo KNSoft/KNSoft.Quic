@@ -142,6 +142,9 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <KNSoftQuicStaticLTCGLibrary>$(SolutionDir)OutDir\$(KnsoftArch)\Release\KNSoft.Quic.Static.LTCG.$([System.Version]::Parse('$(VCToolsVersion)').ToString(2)).lib</KNSoftQuicStaticLTCGLibrary>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <IncludePath>$(ProjectDir)..\msquic\src\inc;$(IncludePath)</IncludePath>
   </PropertyGroup>
@@ -190,7 +193,7 @@
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
-      <AdditionalDependencies>$(OutDir)KNSoft.Quic.Static.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(KNSoftQuicStaticLTCGLibrary);%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>$(ProjectName).def</ModuleDefinitionFile>
     </Link>
     <Manifest>
@@ -244,7 +247,7 @@
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
-      <AdditionalDependencies>$(OutDir)KNSoft.Quic.Static.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(KNSoftQuicStaticLTCGLibrary);%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>$(ProjectName).def</ModuleDefinitionFile>
     </Link>
     <Manifest>
@@ -259,7 +262,7 @@
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
-      <AdditionalDependencies>$(OutDir)KNSoft.Quic.Static.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(KNSoftQuicStaticLTCGLibrary);%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>$(ProjectName).def</ModuleDefinitionFile>
     </Link>
     <Manifest>
@@ -274,7 +277,7 @@
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
-      <AdditionalDependencies>$(OutDir)KNSoft.Quic.Static.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(KNSoftQuicStaticLTCGLibrary);%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>$(ProjectName).def</ModuleDefinitionFile>
     </Link>
     <Manifest>
@@ -316,7 +319,7 @@
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
-      <AdditionalDependencies>$(SolutionDir)OutDir\$(KnsoftArch)\Release\KNSoft.Quic.Static.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(KNSoftQuicStaticLTCGLibrary);%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>$(ProjectName).def</ModuleDefinitionFile>
     </Link>
     <Manifest>

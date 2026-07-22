@@ -15,7 +15,7 @@
 
   <BoolProperty Name="OptimizeGlobalData"
                 DisplayName="Optimize Global Data"
-                Description="Pass /Gw to compile global data into individual COMDAT sections."
+                Description="Pass /Gw to compile global data into individual COMDAT sections when enabled."
                 Category="Compiler" />
 
   <BoolProperty Name="OmitCoffGroupInfo"

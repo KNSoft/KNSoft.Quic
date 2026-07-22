@@ -231,8 +231,9 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Main.c">
+    <ClCompile Include="..\Main.c">
       <P4CSymbolsToKeepPublic>MsQuic*</P4CSymbolsToKeepPublic>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

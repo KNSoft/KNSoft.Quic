@@ -13,7 +13,15 @@
     <BuildType Solution="DebugMD|*" Project="Debug" />
     <BuildType Solution="ReleaseMD|*" Project="Release" />
   </Project>
+  <Project Path="KNSoft.Quic.Static.LTCG/KNSoft.Quic.Static.LTCG.vcxproj" Id="d94ce22a-0636-4edd-9264-ce4f4a0cb90e">
+    <BuildType Solution="Debug|*" Project="Release" />
+    <BuildType Solution="DebugMD|*" Project="Release" />
+    <Build Solution="Debug|*" Project="false" />
+    <Build Solution="DebugMD|*" Project="false" />
+    <BuildType Solution="ReleaseMD|*" Project="Release" />
+  </Project>
   <Project Path="KNSoft.Quic/KNSoft.Quic.vcxproj" Id="edaf7a96-77e2-4f69-83c3-9933e6c2b120">
     <BuildDependency Project="KNSoft.Quic.Static/KNSoft.Quic.Static.vcxproj" />
+    <BuildDependency Project="KNSoft.Quic.Static.LTCG/KNSoft.Quic.Static.LTCG.vcxproj" />
   </Project>
 </Solution>

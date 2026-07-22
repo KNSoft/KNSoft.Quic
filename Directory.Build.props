@@ -27,11 +27,11 @@
         <MASM>
             <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
         </MASM>
-        <!-- FIXME: CL preprocessor may break this
         <MARMASM>
-            <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+            <PreprocessedFileName>$(IntDir)%(RelativeDir)%(FileName)%(Extension)</PreprocessedFileName>
+            <PreprocessOutputPath>$(IntDir)%(RelativeDir)%(FileName)%(Extension)</PreprocessOutputPath>
+            <ObjectFileName>%(RootDir)%(Directory)%(FileName).obj</ObjectFileName>
         </MARMASM>
-        -->
     </ItemDefinitionGroup>
 
     <!-- Enable Safe SEH for MASM Release x86, as well as CL default -->
@@ -79,9 +79,17 @@
         <ForceImportAfterCppProps>$(MsbuildThisFileDirectory)\Directory.Build.AfterCpp.props</ForceImportAfterCppProps>
     </PropertyGroup>
 
-    <!-- Import $(MSBuildProjectName).Build.(props/targets) if exists -->
+    <!-- Import $(MSBuildProjectName).Build.props if exists -->
     <Import Project="$(MSBuildProjectDirectory)\$(MSBuildProjectName).Build.props" Condition="Exists('$(MSBuildProjectDirectory)\$(MSBuildProjectName).Build.props')"/>
-    <Import Project="$(MSBuildProjectDirectory)\$(MSBuildProjectName).Build.targets" Condition="Exists('$(MSBuildProjectDirectory)\$(MSBuildProjectName).Build.targets')"/>
+
+    <!-- Fall back to an early import when a caller-provided ForceImportAfterCppTargets hook already occupies the late import. -->
+    <Import Project="$(MSBuildProjectDirectory)\$(MSBuildProjectName).Build.targets" Condition="'$(ForceImportAfterCppTargets)' != '' and Exists('$(MSBuildProjectDirectory)\$(MSBuildProjectName).Build.targets')"/>
+
+    <PropertyGroup>
+        <!-- Import project-specific targets after Microsoft.Cpp.targets so their build dependency customizations are not overwritten.
+             Preserve a caller-provided ForceImportAfterCppTargets hook. -->
+        <ForceImportAfterCppTargets Condition="'$(ForceImportAfterCppTargets)' == '' and Exists('$(MSBuildProjectDirectory)\$(MSBuildProjectName).Build.targets')">$(MSBuildProjectDirectory)\$(MSBuildProjectName).Build.targets</ForceImportAfterCppTargets>
+    </PropertyGroup>
     
     <!-- Import outer Directory.Build.props if exists -->
     <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" Condition="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../')) != ''" />
