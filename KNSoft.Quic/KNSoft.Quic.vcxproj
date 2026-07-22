@@ -144,6 +144,8 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <KNSoftQuicStaticLTCGLibrary>$(SolutionDir)OutDir\$(KnsoftArch)\Release\KNSoft.Quic.Static.LTCG.$([System.Version]::Parse('$(VCToolsVersion)').ToString(2)).lib</KNSoftQuicStaticLTCGLibrary>
+    <KNSoftQuicStaticLTCGPGD>$(SolutionDir)OutDir\$(KnsoftArch)\Release\KNSoft.Quic.Static.LTCG.$([System.Version]::Parse('$(VCToolsVersion)').ToString(2)).pgd</KNSoftQuicStaticLTCGPGD>
+    <KNSoftQuicPGD Condition="$(Configuration.Contains(`Release`)) and ('$(Platform)'=='Win32' or '$(Platform)'=='x64')">$(IntDir)$(TargetName).pgd</KNSoftQuicPGD>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <IncludePath>$(ProjectDir)..\msquic\src\inc;$(IncludePath)</IncludePath>
@@ -326,6 +328,14 @@
       <EnableSegmentHeap>true</EnableSegmentHeap>
     </Manifest>
   </ItemDefinitionGroup>
+  <!-- Allow the unity-build LTCG input to reuse upstream MsQuic profiles. -->
+  <ItemDefinitionGroup Condition="$(Configuration.Contains(`Release`)) and ('$(Platform)'=='Win32' or '$(Platform)'=='x64')">
+    <Link>
+      <LinkTimeCodeGeneration>PGOptimization</LinkTimeCodeGeneration>
+      <ProfileGuidedDatabase>$(KNSoftQuicPGD)</ProfileGuidedDatabase>
+      <AdditionalOptions>/FORCE:PGOREPRO %(AdditionalOptions)</AdditionalOptions>
+    </Link>
+  </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="DllMain.c" />
   </ItemGroup>
@@ -336,6 +346,9 @@
     <None Include="KNSoft.Quic.def" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <Target Name="CopyPgdForLink" BeforeTargets="Link" Condition="'$(KNSoftQuicPGD)'!=''">
+    <Copy SourceFiles="$(KNSoftQuicStaticLTCGPGD)" DestinationFiles="$(KNSoftQuicPGD)" />
+  </Target>
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
 </Project>

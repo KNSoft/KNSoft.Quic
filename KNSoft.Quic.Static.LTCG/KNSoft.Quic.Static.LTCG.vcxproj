@@ -62,6 +62,8 @@
   <PropertyGroup>
     <IncludePath>$(ProjectDir);$(ProjectDir)..\msquic\src\inc;$(IncludePath)</IncludePath>
     <TargetName>KNSoft.Quic.Static.LTCG.$([System.Version]::Parse('$(VCToolsVersion)').ToString(2))</TargetName>
+    <KNSoftQuicPGDSource Condition="'$(Platform)'=='Win32'">$(ProjectDir)..\msquic\src\bin\winuser\pgo_x86\msquic.pgd</KNSoftQuicPGDSource>
+    <KNSoftQuicPGDSource Condition="'$(Platform)'=='x64'">$(ProjectDir)..\msquic\src\bin\winuser\pgo_x64\msquic.schannel.pgd</KNSoftQuicPGDSource>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
@@ -110,6 +112,10 @@
     <ClInclude Include="..\precomp.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <!-- Keep profile data beside LTCG libraries for downstream links. -->
+  <Target Name="CopyPgd" AfterTargets="Lib" Condition="'$(KNSoftQuicPGDSource)'!=''">
+    <Copy SourceFiles="$(KNSoftQuicPGDSource)" DestinationFiles="$(OutDir)$(TargetName).pgd" SkipUnchangedFiles="true" />
+  </Target>
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
 </Project>
