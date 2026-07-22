@@ -14,6 +14,8 @@
 
     <!-- Release defaults -->
     <PropertyGroup Condition="$(Configuration.Contains(`Release`))">
+        <!-- /Gw must be enabled when static library objects are compiled; consumers cannot apply it retroactively.
+             Enable it for Release static libraries so final links can discard unused global data, but preserve MSVC's default for EXE/DLL. -->
         <OptimizeGlobalData Condition="'$(OptimizeGlobalData)' == '' and '$(ConfigurationType)' == 'StaticLibrary'">true</OptimizeGlobalData>
         <OptimizeGlobalData Condition="'$(OptimizeGlobalData)' == ''">false</OptimizeGlobalData>
         <OmitCoffGroupInfo Condition="'$(OmitCoffGroupInfo)' == ''">true</OmitCoffGroupInfo>
@@ -105,6 +107,18 @@
             AfterTargets="ComputeLinkSwitches"
             BeforeTargets="Link"
             Condition="'@(Link)' != '' and $(Configuration.Contains(`Release`))">
+        <Message Condition="'$(OmitCoffGroupInfo)' == 'true' and
+                            ('%(Link.LinkTimeCodeGeneration)' == 'PGInstrument' or
+                             '%(Link.LinkTimeCodeGeneration)' == 'PGOptimization' or
+                             '%(Link.LinkTimeCodeGeneration)' == 'PGUpdate')"
+                 Importance="High"
+                 Text="KNSoft: Omit COFF Group Information is ignored because PGO is enabled." />
+        <Message Condition="'$(OmitRichHeader)' == 'true' and
+                            ('%(Link.LinkTimeCodeGeneration)' == 'PGInstrument' or
+                             '%(Link.LinkTimeCodeGeneration)' == 'PGOptimization' or
+                             '%(Link.LinkTimeCodeGeneration)' == 'PGUpdate')"
+                 Importance="High"
+                 Text="KNSoft: Omit Rich Header is ignored because PGO is enabled." />
         <ItemGroup>
             <Link Condition="'$(OmitCoffGroupInfo)' == 'true' and
                              '%(Link.LinkTimeCodeGeneration)' != 'PGInstrument' and
@@ -114,7 +128,10 @@
             </Link>
         </ItemGroup>
         <ItemGroup>
-            <Link Condition="'$(OmitRichHeader)' == 'true'">
+            <Link Condition="'$(OmitRichHeader)' == 'true' and
+                             '%(Link.LinkTimeCodeGeneration)' != 'PGInstrument' and
+                             '%(Link.LinkTimeCodeGeneration)' != 'PGOptimization' and
+                             '%(Link.LinkTimeCodeGeneration)' != 'PGUpdate'">
                 <AdditionalOptions>%(Link.AdditionalOptions) /EMITTOOLVERSIONINFO:NO</AdditionalOptions>
             </Link>
         </ItemGroup>
