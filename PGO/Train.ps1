@@ -222,7 +222,7 @@ function Stop-Server([Diagnostics.Process]$Process, [string]$Address) {
     $Endpoint = [Net.IPEndPoint]::new($IpAddress, 9999)
     $ShutdownPacket = [byte[]](0x57, 0xe6, 0x15, 0xff, 0x26, 0x4f, 0x0e, 0x57, 0x88, 0xab, 0x07, 0x96, 0xb2, 0x58, 0xd1, 0x1c)
     try {
-        for ($Attempt = 0; $Attempt -lt 10 -and !$Process.HasExited; $Attempt++) {
+        for ($Attempt = 0; $Attempt -lt 60 -and !$Process.HasExited; $Attempt++) {
             [void]$Socket.Send($ShutdownPacket, $ShutdownPacket.Length, $Endpoint)
             [void]$Process.WaitForExit(1000)
         }
@@ -287,13 +287,14 @@ function Get-ScenarioDuration([object]$Scenario) {
 
 function Get-ScenarioArguments([object]$Scenario, [object]$Network, [int]$Duration) {
     $Target = if ($null -eq $Network) { "localhost" } else { [string]$Network.serverAddress }
+    $WatchdogTimeout = [Math]::Max(60000, ($Duration + 60) * 1000)
     $Arguments = @(
         "-target:$Target",
         "-scenario:$($Scenario.preset)",
         "-io:iocp",
         "-tcp:0",
         "-trimout",
-        "-watchdog:30000"
+        "-watchdog:$WatchdogTimeout"
     )
     if ($null -ne $Network) {
         $Arguments += "-bind:$($Network.clientAddress)"
@@ -364,7 +365,7 @@ function Invoke-Workload(
     try {
         Wait-ServerReady $Server $ServerOutput
         $Client = Start-Process (Join-Path $RunDirectory.Client "secnetperf.exe") -ArgumentList (Get-ScenarioArguments $Scenario $Network $Duration) -WorkingDirectory $RunDirectory.Client -RedirectStandardOutput $ClientOutput -RedirectStandardError $ClientError -PassThru -WindowStyle Hidden
-        $Timeout = [Math]::Max(45000, ($Duration + 20) * 1000)
+        $Timeout = [Math]::Max(90000, ($Duration + 90) * 1000)
         if (!$Client.WaitForExit($Timeout)) {
             $Client.Kill()
             $Client.WaitForExit()
