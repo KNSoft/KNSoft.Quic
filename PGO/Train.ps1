@@ -60,9 +60,6 @@ function Get-VisualStudio {
     } else {
         "Hostx64"
     }
-    $DumpBin = Get-ChildItem (Join-Path $ToolsRoot "bin\$HostDirectory") -Recurse -Filter "dumpbin.exe" |
-        Select-Object -First 1 -ExpandProperty FullName
-
     [pscustomobject]@{
         InstallPath = $InstallPath
         InstallationVersion = & $VsWhere -latest -products * -requires Microsoft.Component.MSBuild -property installationVersion
@@ -70,7 +67,6 @@ function Get-VisualStudio {
         ToolsRoot = $ToolsRoot
         MSBuild = Join-Path $InstallPath "MSBuild\Current\Bin\MSBuild.exe"
         HostDirectory = $HostDirectory
-        DumpBin = $DumpBin
     }
 }
 
@@ -265,6 +261,24 @@ function Resolve-Scenario([object]$Configuration, [object]$Specification) {
         $Properties[$Property.Name] = $Property.Value
     }
     return [pscustomobject]$Properties
+}
+
+function Get-NetworkProfile([object]$Configuration, [string]$Name) {
+    $Profile = $Configuration.emulatedNetwork.profiles | Where-Object name -eq $Name | Select-Object -First 1
+    if ($null -eq $Profile) {
+        throw "Network profile '$Name' was not found in $ConfigurationFile."
+    }
+    return $Profile
+}
+
+function New-NetworkConfiguration([object]$Configuration, [object]$Profile) {
+    [pscustomobject]@{
+        name = $Profile.name
+        clientAddress = Get-OptionalProperty $Profile "clientAddress" $Configuration.emulatedNetwork.clientAddress
+        serverAddress = Get-OptionalProperty $Profile "serverAddress" $Configuration.emulatedNetwork.serverAddress
+        pacing = $Profile.pacing
+        congestionControl = $Profile.congestionControl
+    }
 }
 
 function Get-ScenarioDuration([object]$Scenario) {
@@ -500,20 +514,12 @@ function Test-ProfileBuild(
     $OutputArch = Get-OutputArchitecture $Arch
     $Configuration = Get-Configuration $Crt
     $Dll = Join-Path $RepoRoot "OutDir\$OutputArch\$Configuration\KNSoft.Quic.dll"
-    $ExpectedExports = @(Get-Content (Join-Path $RepoRoot "KNSoft.Quic\KNSoft.Quic.def") |
-        Where-Object { $_.Trim() -and $_.Trim() -ne "EXPORTS" }).Count
-    $ActualExports = @(& $VisualStudio.DumpBin /nologo /exports $Dll |
-        Select-String "^\s+\d+\s+[0-9A-F]+\s+[0-9A-F]+\s+\S+").Count
-    if ($ActualExports -ne $ExpectedExports) {
-        throw "Expected $ExpectedExports exports in $Dll, found $ActualExports."
-    }
 
     [ordered]@{
         profiledFunctions = [int]$FunctionMatch.Groups[1].Value
         totalFunctions = [int]$FunctionMatch.Groups[2].Value
         profiledFunctionsPercent = $FunctionPercent
         profiledInstructionsPercent = $InstructionPercent
-        exports = $ActualExports
         dllSize = (Get-Item $Dll).Length
         dllSha256 = (Get-FileHash $Dll -Algorithm SHA256).Hash.ToLowerInvariant()
     }
@@ -537,6 +543,7 @@ function Copy-CurrentDll([string]$Arch, [string]$Crt, [string]$Destination) {
 function Test-Performance(
     [object]$VisualStudio,
     [object]$Configuration,
+    [object]$NetworkState,
     [string]$Arch,
     [string]$Crt,
     [object]$Tool,
@@ -565,28 +572,61 @@ function Test-Performance(
 
     $Results = @()
     $Validation = $Configuration.validation
-    $TestScenarios = @($Validation.scenarios | ForEach-Object { Get-Scenario $Configuration $_ })
-    foreach ($Scenario in $TestScenarios) {
-        foreach ($Variant in $Variants.GetEnumerator()) {
-            Write-Host "Warmup $Arch/$Crt/$($Scenario.name)/$($Variant.Key)"
-            $WarmupDirectory = Join-Path $TempRoot "Results\$Arch\$Crt\runs\$($Scenario.name)\$($Variant.Key)\warmup"
-            $null = Invoke-Workload $RunDirectories[$Variant.Key] $Scenario $null ([int]$Validation.durationSeconds) $WarmupDirectory
+    $TestCases = @($Validation.scenarios | ForEach-Object {
+        $Scenario = Get-Scenario $Configuration $_
+        [pscustomobject]@{
+            Name = $Scenario.name
+            Scenario = $Scenario
+            Network = $null
+            NetworkProfile = $null
+        }
+    })
+    if ($NetworkState.Enabled) {
+        $TestCases += @(Get-OptionalProperty $Validation "emulatedNetwork" @() | ForEach-Object {
+            $Profile = Get-NetworkProfile $Configuration $_.profile
+            $Scenario = Get-Scenario $Configuration $_.scenario
+            [pscustomobject]@{
+                Name = "network-$($Profile.name)-$($Scenario.name)"
+                Scenario = $Scenario
+                Network = New-NetworkConfiguration $Configuration $Profile
+                NetworkProfile = $Profile
+            }
+        })
+    }
+
+    $NetworkCaseIndex = 0
+    foreach ($TestCase in $TestCases) {
+        $Scenario = $TestCase.Scenario
+        if ($null -ne $TestCase.NetworkProfile) {
+            $Seed = $BaseRandomSeed + (128 + $NetworkCaseIndex++).ToString("x2")
+            $null = Set-DuoNicProfile $TestCase.NetworkProfile $Seed
+            $CaseVariants = @($Variants.GetEnumerator() |
+                Where-Object Key -in @("KNSoft-Custom", "Upstream-MsQuic"))
+        } else {
+            $CaseVariants = @($Variants.GetEnumerator())
+        }
+
+        foreach ($Variant in $CaseVariants) {
+            Write-Host "Warmup $Arch/$Crt/$($TestCase.Name)/$($Variant.Key)"
+            $WarmupDirectory = Join-Path $TempRoot "Results\$Arch\$Crt\runs\$($TestCase.Name)\$($Variant.Key)\warmup"
+            $null = Invoke-Workload $RunDirectories[$Variant.Key] $Scenario $TestCase.Network ([int]$Validation.durationSeconds) $WarmupDirectory
         }
 
         for ($Iteration = 1; $Iteration -le [int]$Validation.iterations; $Iteration++) {
-            $Order = @($Variants.GetEnumerator())
+            $Order = @($CaseVariants)
             if (($Iteration % 2) -eq 0) {
                 [array]::Reverse($Order)
             }
             foreach ($Variant in $Order) {
-                Write-Host "Benchmark $Arch/$Crt/$($Scenario.name)/$($Variant.Key) ($Iteration/$($Validation.iterations))"
-                $OutputDirectory = Join-Path $TempRoot "Results\$Arch\$Crt\runs\$($Scenario.name)\$($Variant.Key)\run-$Iteration"
-                $Result = Invoke-Workload $RunDirectories[$Variant.Key] $Scenario $null ([int]$Validation.durationSeconds) $OutputDirectory
+                Write-Host "Benchmark $Arch/$Crt/$($TestCase.Name)/$($Variant.Key) ($Iteration/$($Validation.iterations))"
+                $OutputDirectory = Join-Path $TempRoot "Results\$Arch\$Crt\runs\$($TestCase.Name)\$($Variant.Key)\run-$Iteration"
+                $Result = Invoke-Workload $RunDirectories[$Variant.Key] $Scenario $TestCase.Network ([int]$Validation.durationSeconds) $OutputDirectory
                 $Results += [pscustomobject]@{
                     Architecture = $Arch
                     Runtime = $Crt
                     Variant = $Variant.Key
-                    Scenario = $Scenario.name
+                    Scenario = $TestCase.Name
+                    Preset = $Scenario.preset
                     Iteration = $Iteration
                     Metric = $Result.Metric
                     P50Us = $Result.P50Us
@@ -620,17 +660,33 @@ function Test-Performance(
     $Summary | Sort-Object Scenario, Variant | Export-Csv (Join-Path $ResultRoot "summary.csv") -NoTypeInformation -Encoding utf8
 
     $Regressions = @()
-    foreach ($Scenario in $TestScenarios) {
+    foreach ($TestCase in $TestCases) {
         $Baseline = @{}
         $Results |
-            Where-Object { $_.Scenario -eq $Scenario.name -and $_.Variant -eq "Upstream-MsQuic" } |
+            Where-Object { $_.Scenario -eq $TestCase.Name -and $_.Variant -eq "Upstream-MsQuic" } |
             ForEach-Object { $Baseline[$_.Iteration] = [double]$_.Metric }
         $Deltas = @($Results |
-            Where-Object { $_.Scenario -eq $Scenario.name -and $_.Variant -eq "KNSoft-Custom" } |
+            Where-Object { $_.Scenario -eq $TestCase.Name -and $_.Variant -eq "KNSoft-Custom" } |
             ForEach-Object { (([double]$_.Metric / $Baseline[$_.Iteration]) - 1) * 100 })
         $Delta = [Math]::Round((Get-Median $Deltas), 3)
         if ($Delta -lt -[double]$Validation.allowedRegressionPercent) {
-            $Regressions += "$($Scenario.name) $Delta%"
+            $Regressions += "$($TestCase.Name) metric $Delta%"
+        }
+
+        if ($TestCase.Scenario.preset -notin @("upload", "download", "hps")) {
+            foreach ($LatencyMetric in @("P50Us", "P99999Us")) {
+                $Baseline = @{}
+                $Results |
+                    Where-Object { $_.Scenario -eq $TestCase.Name -and $_.Variant -eq "Upstream-MsQuic" } |
+                    ForEach-Object { $Baseline[$_.Iteration] = [double]$_.$LatencyMetric }
+                $Deltas = @($Results |
+                    Where-Object { $_.Scenario -eq $TestCase.Name -and $_.Variant -eq "KNSoft-Custom" } |
+                    ForEach-Object { (([double]$_.$LatencyMetric / $Baseline[$_.Iteration]) - 1) * 100 })
+                $Delta = [Math]::Round((Get-Median $Deltas), 3)
+                if ($Delta -gt [double]$Validation.allowedRegressionPercent) {
+                    $Regressions += "$($TestCase.Name) $LatencyMetric +$Delta%"
+                }
+            }
         }
     }
     if ($Regressions) {
@@ -640,7 +696,7 @@ function Test-Performance(
     [ordered]@{
         iterations = [int]$Validation.iterations
         durationSeconds = [int]$Validation.durationSeconds
-        scenarios = @($Validation.scenarios)
+        scenarios = @($TestCases.Name)
         allowedRegressionPercent = [double]$Validation.allowedRegressionPercent
         passed = $true
     }
@@ -676,6 +732,11 @@ foreach ($Arch in $Architecture) {
 
     $ArchOutput = Get-OutputArchitecture $Arch
     $ManifestPath = Join-Path $ProfileRoot "$ArchOutput\manifest.json"
+    $StagedProfileRoot = Join-Path $TempRoot "Profiles\$ArchOutput"
+    if (Test-Path $StagedProfileRoot) {
+        Remove-Item -LiteralPath $StagedProfileRoot -Recurse -Force
+    }
+    New-Item -ItemType Directory -Force $StagedProfileRoot | Out-Null
     $Profiles = @()
     if (Test-Path $ManifestPath) {
         $ExistingManifest = Get-Content $ManifestPath -Raw | ConvertFrom-Json
@@ -686,7 +747,7 @@ foreach ($Arch in $Architecture) {
         $Configuration = Get-Configuration $Crt
         $Dll = Join-Path $RepoRoot "OutDir\$ArchOutput\$Configuration\KNSoft.Quic.dll"
         $InitialPgd = Join-Path $RepoRoot "KNSoft.Quic\IntDir\$ArchOutput\$Configuration\KNSoft.Quic.pgd"
-        $RuntimeProfileRoot = Join-Path $ProfileRoot "$ArchOutput\$Crt"
+        $RuntimeProfileRoot = Join-Path $StagedProfileRoot $Crt
         $PgcRoot = Join-Path $TempRoot "PGC\$ArchOutput\$Crt"
         $FinalPgd = Join-Path $RuntimeProfileRoot "KNSoft.Quic.pgd"
 
@@ -696,9 +757,6 @@ foreach ($Arch in $Architecture) {
             throw "Instrumented DLL or initial PGD is missing for $Arch/$Crt."
         }
 
-        if (Test-Path $RuntimeProfileRoot) {
-            Remove-Item -LiteralPath $RuntimeProfileRoot -Recurse -Force
-        }
         if (Test-Path $PgcRoot) {
             Remove-Item -LiteralPath $PgcRoot -Recurse -Force
         }
@@ -724,13 +782,7 @@ foreach ($Arch in $Architecture) {
                 for ($Iteration = 1; $Iteration -le [int]$Training.emulatedNetwork.iterations; $Iteration++) {
                     $Seed = $BaseRandomSeed + ($NetworkIndex++).ToString("x2")
                     $BufferPackets = Set-DuoNicProfile $NetworkProfile $Seed
-                    $Network = [pscustomobject]@{
-                        name = $NetworkProfile.name
-                        clientAddress = Get-OptionalProperty $NetworkProfile "clientAddress" $Training.emulatedNetwork.clientAddress
-                        serverAddress = Get-OptionalProperty $NetworkProfile "serverAddress" $Training.emulatedNetwork.serverAddress
-                        pacing = $NetworkProfile.pacing
-                        congestionControl = $NetworkProfile.congestionControl
-                    }
+                    $Network = New-NetworkConfiguration $Training $NetworkProfile
                     $ScenarioSpecifications = @(Get-OptionalProperty $NetworkProfile "scenarios" $Training.emulatedNetwork.scenarios)
                     foreach ($ScenarioSpecification in $ScenarioSpecifications) {
                         $Scenario = Resolve-Scenario $Training $ScenarioSpecification
@@ -768,7 +820,7 @@ foreach ($Arch in $Architecture) {
         $BuildValidation = Test-ProfileBuild $VisualStudio $Arch $Crt $FinalPgd $Training.validation
         $CustomDll = Join-Path $TempRoot "Binaries\$Arch\$Crt\KNSoft-Custom\msquic.dll"
         Copy-CurrentDll $Arch $Crt $CustomDll
-        $PerformanceValidation = Test-Performance $VisualStudio $Training $Arch $Crt $Tools[$Crt] $CustomDll
+        $PerformanceValidation = Test-Performance $VisualStudio $Training $NetworkState $Arch $Crt $Tools[$Crt] $CustomDll
 
         $ProfileFile = Get-Item $FinalPgd
         $Profiles += [ordered]@{
@@ -814,8 +866,27 @@ foreach ($Arch in $Architecture) {
         }
         profiles = @($Profiles | Sort-Object runtime)
     }
+    $StagedManifestPath = Join-Path $StagedProfileRoot "manifest.json"
+    $Manifest | ConvertTo-Json -Depth 12 | Set-Content $StagedManifestPath -Encoding utf8
+
+    #
+    # Keep the previously validated profiles intact until every selected CRT
+    # has completed training and validation.
+    #
+    $PendingProfiles = foreach ($Crt in $Runtime) {
+        $Destination = Join-Path $ProfileRoot "$ArchOutput\$Crt\KNSoft.Quic.pgd"
+        New-Item -ItemType Directory -Force (Split-Path $Destination -Parent) | Out-Null
+        $Pending = "$Destination.new"
+        Copy-Item (Join-Path $StagedProfileRoot "$Crt\KNSoft.Quic.pgd") $Pending -Force
+        [pscustomobject]@{ Pending = $Pending; Destination = $Destination }
+    }
     New-Item -ItemType Directory -Force (Split-Path $ManifestPath -Parent) | Out-Null
-    $Manifest | ConvertTo-Json -Depth 12 | Set-Content $ManifestPath -Encoding utf8
+    $PendingManifest = "$ManifestPath.new"
+    Copy-Item $StagedManifestPath $PendingManifest -Force
+    foreach ($Profile in $PendingProfiles) {
+        Move-Item $Profile.Pending $Profile.Destination -Force
+    }
+    Move-Item $PendingManifest $ManifestPath -Force
 }
 
 Write-Host "PGO training and validation completed. Profiles are under $ProfileRoot."

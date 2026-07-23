@@ -164,6 +164,20 @@
       "hps",
       "rps",
       "latency"
+    ],
+    "emulatedNetwork": [
+      {
+        "profile": "wan-loss",
+        "scenario": "download"
+      },
+      {
+        "profile": "wan-reorder",
+        "scenario": "rps"
+      },
+      {
+        "profile": "longhaul-bbr",
+        "scenario": "latency"
+      }
     ]
   }
 }

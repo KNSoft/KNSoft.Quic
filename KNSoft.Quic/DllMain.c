@@ -11,7 +11,7 @@ DllMain(
 
     if (Reason == DLL_PROCESS_ATTACH)
     {
-#ifndef _MT
+#ifdef _DLL
         DisableThreadLibraryCalls(DllHandle);
 #else
         UNREFERENCED_PARAMETER(DllHandle);

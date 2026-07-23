@@ -23,13 +23,18 @@
     <file src="msquic\src\inc\msquic_winuser.h" target="build\Include\msquic\src\inc\" />
     <file src="msquic\src\core\api.h" target="build\Include\msquic\src\core\" />
 
-    <file src="OutDir\**\*.lib" exclude="OutDir\x86\**" target="build\Lib\" />
-    <file src="OutDir\**\*.pdb" exclude="OutDir\x86\**" target="build\Lib\" />
-    <file src="OutDir\**\*.pgd" exclude="OutDir\x86\**" target="build\Lib\" />
-    <file src="OutDir\**\*PGO.json" exclude="OutDir\x86\**" target="build\Lib\" />
-    <file src="OutDir\x86\**\*.lib" target="build\Lib\Win32\" />
-    <file src="OutDir\x86\**\*.pdb" exclude="OutDir\x86\**\Demo.pdb" target="build\Lib\Win32\" />
-    <file src="OutDir\x86\**\*.pgd" target="build\Lib\Win32\" />
-    <file src="OutDir\x86\**\*PGO.json" target="build\Lib\Win32\" />
+    <file src="OutDir\**\KNSoft.Quic*.lib" exclude="OutDir\x86\**" target="build\Lib\" />
+    <file src="OutDir\**\KNSoft.Quic.Static*.pdb" exclude="OutDir\x86\**" target="build\Lib\" />
+    <file src="OutDir\**\Release\KNSoft.Quic.Static.LTCG.*.pgd" exclude="OutDir\x86\**" target="build\Lib\" />
+    <file src="OutDir\**\Release\KNSoft.Quic.Static.LTCG.*.json" exclude="OutDir\x86\**" target="build\Lib\" />
+    <file src="OutDir\x86\**\KNSoft.Quic*.lib" target="build\Lib\Win32\" />
+    <file src="OutDir\x86\**\KNSoft.Quic.Static*.pdb" target="build\Lib\Win32\" />
+    <file src="OutDir\x86\Release\KNSoft.Quic.Static.LTCG.*.pgd" target="build\Lib\Win32\Release\" />
+    <file src="OutDir\x86\Release\KNSoft.Quic.Static.LTCG.*.json" target="build\Lib\Win32\Release\" />
+
+    <file src="OutDir\**\KNSoft.Quic.dll" exclude="OutDir\x86\**" target="build\Bin\" />
+    <file src="OutDir\**\KNSoft.Quic.pdb" exclude="OutDir\x86\**" target="build\Bin\" />
+    <file src="OutDir\x86\**\KNSoft.Quic.dll" target="build\Bin\Win32\" />
+    <file src="OutDir\x86\**\KNSoft.Quic.pdb" target="build\Bin\Win32\" />
   </files>
 </package>
