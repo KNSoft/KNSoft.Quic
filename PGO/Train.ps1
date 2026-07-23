@@ -216,13 +216,12 @@ function Wait-ServerReady([Diagnostics.Process]$Process, [string]$OutputFile) {
     throw "Timed out waiting for the SecNetPerf server."
 }
 
-function Stop-Server([Diagnostics.Process]$Process, [string]$Address) {
-    $IpAddress = [Net.IPAddress]::Parse($Address)
-    $Socket = [Net.Sockets.UdpClient]::new($IpAddress.AddressFamily)
-    $Endpoint = [Net.IPEndPoint]::new($IpAddress, 9999)
+function Stop-Server([Diagnostics.Process]$Process) {
+    $Socket = [Net.Sockets.UdpClient]::new([Net.Sockets.AddressFamily]::InterNetwork)
+    $Endpoint = [Net.IPEndPoint]::new([Net.IPAddress]::Loopback, 9999)
     $ShutdownPacket = [byte[]](0x57, 0xe6, 0x15, 0xff, 0x26, 0x4f, 0x0e, 0x57, 0x88, 0xab, 0x07, 0x96, 0xb2, 0x58, 0xd1, 0x1c)
     try {
-        for ($Attempt = 0; $Attempt -lt 60 -and !$Process.HasExited; $Attempt++) {
+        for ($Attempt = 0; $Attempt -lt 10 -and !$Process.HasExited; $Attempt++) {
             [void]$Socket.Send($ShutdownPacket, $ShutdownPacket.Length, $Endpoint)
             [void]$Process.WaitForExit(1000)
         }
@@ -376,8 +375,7 @@ function Invoke-Workload(
         }
     } finally {
         if (!$Server.HasExited) {
-            $ServerAddress = if ($null -eq $Network) { "127.0.0.1" } else { [string]$Network.serverAddress }
-            Stop-Server $Server $ServerAddress
+            Stop-Server $Server
         }
     }
 
