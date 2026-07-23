@@ -284,6 +284,14 @@ function Get-ScenarioDuration([object]$Scenario) {
     return [int]$Scenario.durationSeconds
 }
 
+function Get-ScenarioWeight([object]$Scenario) {
+    $Weight = [int](Get-OptionalProperty $Scenario "weight" 1)
+    if ($Weight -lt 1) {
+        throw "Scenario weight must be positive: $($Scenario.name)."
+    }
+    return $Weight
+}
+
 function Get-ScenarioArguments([object]$Scenario, [object]$Network, [int]$Duration) {
     $Target = if ($null -eq $Network) { "localhost" } else { [string]$Network.serverAddress }
     $WatchdogTimeout = [Math]::Max(60000, ($Duration + 60) * 1000)
@@ -463,6 +471,31 @@ function Set-DuoNicProfile([object]$Profile, [string]$RandomSeed) {
     return $BufferPackets
 }
 
+function Test-EmulatedNetwork(
+    [object]$Configuration,
+    [object]$NetworkState,
+    [object]$Tool,
+    [string]$Arch,
+    [string]$RandomSeed
+) {
+    $Profile = $Configuration.emulatedNetwork.profiles | Select-Object -First 1
+    $Scenario = Get-Scenario $Configuration "upload"
+    try {
+        $null = Set-DuoNicProfile $Profile $RandomSeed
+        $Network = New-NetworkConfiguration $Configuration $Profile
+        $RunDirectory = Initialize-RunDirectory (Join-Path $TempRoot "Preflight\$Arch") $Tool.Executable $Tool.UpstreamDll $Tool.UpstreamDll
+        $null = Invoke-Workload $RunDirectory $Scenario $Network 1 (Join-Path $TempRoot "Preflight\$Arch\output")
+        Write-Host "DuoNic data-plane preflight passed for $Arch."
+        return $true
+    } catch {
+        if ($NetworkState.Mode -eq "Required") {
+            throw
+        }
+        Write-Warning "DuoNic data-plane preflight failed for $Arch; emulated network training is skipped. $($_.Exception.Message)"
+        return $false
+    }
+}
+
 function Merge-PgcFiles(
     [string]$Manager,
     [string[]]$Files,
@@ -600,7 +633,7 @@ function Test-Performance(
             $Seed = $BaseRandomSeed + (128 + $NetworkCaseIndex++).ToString("x2")
             $null = Set-DuoNicProfile $TestCase.NetworkProfile $Seed
             $CaseVariants = @($Variants.GetEnumerator() |
-                Where-Object Key -in @("KNSoft-Custom", "Upstream-MsQuic"))
+                Where-Object Key -in @("KNSoft-Custom", "KNSoft-None", "Upstream-MsQuic"))
         } else {
             $CaseVariants = @($Variants.GetEnumerator())
         }
@@ -660,28 +693,26 @@ function Test-Performance(
 
     $Regressions = @()
     foreach ($TestCase in $TestCases) {
-        $Baseline = @{}
-        $Results |
-            Where-Object { $_.Scenario -eq $TestCase.Name -and $_.Variant -eq "Upstream-MsQuic" } |
-            ForEach-Object { $Baseline[$_.Iteration] = [double]$_.Metric }
-        $Deltas = @($Results |
+        $Baseline = Get-Median @($Results |
+            Where-Object { $_.Scenario -eq $TestCase.Name -and $_.Variant -eq "KNSoft-None" } |
+            ForEach-Object { [double]$_.Metric })
+        $Candidate = Get-Median @($Results |
             Where-Object { $_.Scenario -eq $TestCase.Name -and $_.Variant -eq "KNSoft-Custom" } |
-            ForEach-Object { (([double]$_.Metric / $Baseline[$_.Iteration]) - 1) * 100 })
-        $Delta = [Math]::Round((Get-Median $Deltas), 3)
+            ForEach-Object { [double]$_.Metric })
+        $Delta = [Math]::Round((($Candidate / $Baseline) - 1) * 100, 3)
         if ($Delta -lt -[double]$Validation.allowedRegressionPercent) {
             $Regressions += "$($TestCase.Name) metric $Delta%"
         }
 
         if ($TestCase.Scenario.preset -notin @("upload", "download", "hps")) {
             foreach ($LatencyMetric in @("P50Us", "P99999Us")) {
-                $Baseline = @{}
-                $Results |
-                    Where-Object { $_.Scenario -eq $TestCase.Name -and $_.Variant -eq "Upstream-MsQuic" } |
-                    ForEach-Object { $Baseline[$_.Iteration] = [double]$_.$LatencyMetric }
-                $Deltas = @($Results |
+                $Baseline = Get-Median @($Results |
+                    Where-Object { $_.Scenario -eq $TestCase.Name -and $_.Variant -eq "KNSoft-None" } |
+                    ForEach-Object { [double]$_.$LatencyMetric })
+                $Candidate = Get-Median @($Results |
                     Where-Object { $_.Scenario -eq $TestCase.Name -and $_.Variant -eq "KNSoft-Custom" } |
-                    ForEach-Object { (([double]$_.$LatencyMetric / $Baseline[$_.Iteration]) - 1) * 100 })
-                $Delta = [Math]::Round((Get-Median $Deltas), 3)
+                    ForEach-Object { [double]$_.$LatencyMetric })
+                $Delta = [Math]::Round((($Candidate / $Baseline) - 1) * 100, 3)
                 if ($Delta -gt [double]$Validation.allowedRegressionPercent) {
                     $Regressions += "$($TestCase.Name) $LatencyMetric +$Delta%"
                 }
@@ -689,13 +720,14 @@ function Test-Performance(
         }
     }
     if ($Regressions) {
-        throw "Performance regression against upstream MsQuic exceeds $($Validation.allowedRegressionPercent)%: $($Regressions -join ', ')."
+        throw "Performance regression against unprofiled KNSoft.Quic exceeds $($Validation.allowedRegressionPercent)%: $($Regressions -join ', ')."
     }
 
     [ordered]@{
         iterations = [int]$Validation.iterations
         durationSeconds = [int]$Validation.durationSeconds
         scenarios = @($TestCases.Name)
+        regressionBaseline = "KNSoft-None"
         allowedRegressionPercent = [double]$Validation.allowedRegressionPercent
         passed = $true
     }
@@ -727,6 +759,9 @@ foreach ($Arch in $Architecture) {
     $Tools = @{}
     foreach ($Crt in $Runtime) {
         $Tools[$Crt] = Get-SecNetPerf $Arch $Crt
+    }
+    if ($NetworkState.Enabled) {
+        $NetworkState.Enabled = Test-EmulatedNetwork $Training $NetworkState $Tools["MT"] $Arch ($BaseRandomSeed + "00")
     }
 
     $ArchOutput = Get-OutputArchitecture $Arch
@@ -764,16 +799,24 @@ foreach ($Arch in $Architecture) {
 
         $RunDirectory = Initialize-RunDirectory (Join-Path $TempRoot "Runtime\$ArchOutput\$Crt") $Tools[$Crt].Executable $Dll $Dll $PgoTools.Runtime
         $LocalPgc = @()
+        $LocalPgcGroups = @{}
         for ($Iteration = 1; $Iteration -le $EffectiveIterations; $Iteration++) {
             foreach ($Scenario in $Training.scenarios) {
                 $Duration = Get-ScenarioDuration $Scenario
                 Write-Host "Training local $Arch/$Crt/$($Scenario.name) ($Iteration/$EffectiveIterations)"
                 $OutputDirectory = Join-Path $PgcRoot "local\$Iteration-$($Scenario.name)"
-                $LocalPgc += Invoke-TrainingWorkload $RunDirectory $Scenario $null $Duration $OutputDirectory
+                $Files = @(Invoke-TrainingWorkload $RunDirectory $Scenario $null $Duration $OutputDirectory)
+                $Weight = Get-ScenarioWeight $Scenario
+                $LocalPgc += $Files
+                if (!$LocalPgcGroups.ContainsKey($Weight)) {
+                    $LocalPgcGroups[$Weight] = @()
+                }
+                $LocalPgcGroups[$Weight] += $Files
             }
         }
 
         $EmulatedPgc = @()
+        $EmulatedPgcGroups = @{}
         $EmulatedRuns = @()
         if ($NetworkState.Enabled) {
             $NetworkIndex = 0
@@ -788,7 +831,13 @@ foreach ($Arch in $Architecture) {
                         $Duration = Get-ScenarioDuration $Scenario
                         Write-Host "Training emulated $Arch/$Crt/$($NetworkProfile.name)/$($Scenario.name) ($Iteration/$($Training.emulatedNetwork.iterations))"
                         $OutputDirectory = Join-Path $PgcRoot "emulated\$($NetworkProfile.name)\$Iteration-$($Scenario.name)"
-                        $EmulatedPgc += Invoke-TrainingWorkload $RunDirectory $Scenario $Network $Duration $OutputDirectory
+                        $Files = @(Invoke-TrainingWorkload $RunDirectory $Scenario $Network $Duration $OutputDirectory)
+                        $Weight = Get-ScenarioWeight $Scenario
+                        $EmulatedPgc += $Files
+                        if (!$EmulatedPgcGroups.ContainsKey($Weight)) {
+                            $EmulatedPgcGroups[$Weight] = @()
+                        }
+                        $EmulatedPgcGroups[$Weight] += $Files
                     }
                     $EmulatedRuns += [ordered]@{
                         profile = $NetworkProfile.name
@@ -804,9 +853,11 @@ foreach ($Arch in $Architecture) {
         }
 
         $LocalWeight = if ($NetworkState.Enabled) { [int]$Training.localWeight } else { 1 }
-        Merge-PgcFiles $PgoTools.Manager $LocalPgc $FinalPgd $LocalWeight
-        if ($EmulatedPgc.Count -gt 0) {
-            Merge-PgcFiles $PgoTools.Manager $EmulatedPgc $FinalPgd ([int]$Training.emulatedWeight)
+        foreach ($Weight in @($LocalPgcGroups.Keys | Sort-Object)) {
+            Merge-PgcFiles $PgoTools.Manager $LocalPgcGroups[$Weight] $FinalPgd ($LocalWeight * [int]$Weight)
+        }
+        foreach ($Weight in @($EmulatedPgcGroups.Keys | Sort-Object)) {
+            Merge-PgcFiles $PgoTools.Manager $EmulatedPgcGroups[$Weight] $FinalPgd ([int]$Training.emulatedWeight * [int]$Weight)
         }
 
         $SummaryCopy = Join-Path $PgcRoot "summary.pgd"

@@ -6,31 +6,36 @@
     {
       "name": "upload",
       "preset": "upload",
-      "durationSeconds": 12
+      "durationSeconds": 12,
+      "weight": 2
     },
     {
       "name": "download",
       "preset": "download",
-      "durationSeconds": 12
+      "durationSeconds": 12,
+      "weight": 2
     },
     {
       "name": "upload-multi",
       "preset": "upload",
       "durationSeconds": 12,
       "connections": 4,
-      "streams": 8
+      "streams": 8,
+      "weight": 2
     },
     {
       "name": "download-multi",
       "preset": "download",
       "durationSeconds": 12,
       "connections": 4,
-      "streams": 8
+      "streams": 8,
+      "weight": 2
     },
     {
       "name": "hps",
       "preset": "hps",
-      "durationSeconds": 12
+      "durationSeconds": 12,
+      "weight": 2
     },
     {
       "name": "rps",
