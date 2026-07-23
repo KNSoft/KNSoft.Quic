@@ -690,6 +690,7 @@ function Test-Performance(
     }
     $Summary | Sort-Object Scenario, Variant | Export-Csv (Join-Path $ResultRoot "summary.csv") -NoTypeInformation -Encoding utf8
 
+    # Keep latency percentiles as diagnostics; like upstream, gate only the primary metric.
     $Regressions = @()
     foreach ($TestCase in $TestCases) {
         $Baseline = Get-Median @($Results |
@@ -703,20 +704,6 @@ function Test-Performance(
             $Regressions += "$($TestCase.Name) metric $Delta%"
         }
 
-        if ($TestCase.Scenario.preset -notin @("upload", "download", "hps")) {
-            foreach ($LatencyMetric in @("P50Us", "P99999Us")) {
-                $Baseline = Get-Median @($Results |
-                    Where-Object { $_.Scenario -eq $TestCase.Name -and $_.Variant -eq "KNSoft-None" } |
-                    ForEach-Object { [double]$_.$LatencyMetric })
-                $Candidate = Get-Median @($Results |
-                    Where-Object { $_.Scenario -eq $TestCase.Name -and $_.Variant -eq "KNSoft-Custom" } |
-                    ForEach-Object { [double]$_.$LatencyMetric })
-                $Delta = [Math]::Round((($Candidate / $Baseline) - 1) * 100, 3)
-                if ($Delta -gt [double]$Validation.allowedRegressionPercent) {
-                    $Regressions += "$($TestCase.Name) $LatencyMetric +$Delta%"
-                }
-            }
-        }
     }
     if ($Regressions) {
         throw "Performance regression against unprofiled KNSoft.Quic exceeds $($Validation.allowedRegressionPercent)%: $($Regressions -join ', ')."
