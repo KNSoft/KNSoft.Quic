@@ -474,8 +474,8 @@ function Set-DuoNicProfile([object]$Profile, [string]$RandomSeed) {
 function Test-EmulatedNetwork(
     [object]$Configuration,
     [object]$NetworkState,
-    [object]$Tool,
-    [string]$Arch,
+    [object]$RunDirectory,
+    [string]$Name,
     [string]$RandomSeed
 ) {
     $Profile = $Configuration.emulatedNetwork.profiles | Select-Object -First 1
@@ -483,15 +483,14 @@ function Test-EmulatedNetwork(
     try {
         $null = Set-DuoNicProfile $Profile $RandomSeed
         $Network = New-NetworkConfiguration $Configuration $Profile
-        $RunDirectory = Initialize-RunDirectory (Join-Path $TempRoot "Preflight\$Arch") $Tool.Executable $Tool.UpstreamDll $Tool.UpstreamDll
-        $null = Invoke-Workload $RunDirectory $Scenario $Network 1 (Join-Path $TempRoot "Preflight\$Arch\output")
-        Write-Host "DuoNic data-plane preflight passed for $Arch."
+        $null = Invoke-Workload $RunDirectory $Scenario $Network 1 (Join-Path $TempRoot "Preflight\$Name")
+        Write-Host "DuoNic data-plane preflight passed for $Name."
         return $true
     } catch {
         if ($NetworkState.Mode -eq "Required") {
             throw
         }
-        Write-Warning "DuoNic data-plane preflight failed for $Arch; emulated network training is skipped. $($_.Exception.Message)"
+        Write-Warning "DuoNic data-plane preflight failed for $Name; emulated network training is skipped. $($_.Exception.Message)"
         return $false
     }
 }
@@ -760,10 +759,6 @@ foreach ($Arch in $Architecture) {
     foreach ($Crt in $Runtime) {
         $Tools[$Crt] = Get-SecNetPerf $Arch $Crt
     }
-    if ($NetworkState.Enabled) {
-        $NetworkState.Enabled = Test-EmulatedNetwork $Training $NetworkState $Tools["MT"] $Arch ($BaseRandomSeed + "00")
-    }
-
     $ArchOutput = Get-OutputArchitecture $Arch
     $ManifestPath = Join-Path $ProfileRoot "$ArchOutput\manifest.json"
     $StagedProfileRoot = Join-Path $TempRoot "Profiles\$ArchOutput"
@@ -798,6 +793,9 @@ foreach ($Arch in $Architecture) {
         Copy-Item $InitialPgd $FinalPgd
 
         $RunDirectory = Initialize-RunDirectory (Join-Path $TempRoot "Runtime\$ArchOutput\$Crt") $Tools[$Crt].Executable $Dll $Dll $PgoTools.Runtime
+        if ($NetworkState.Enabled) {
+            $NetworkState.Enabled = Test-EmulatedNetwork $Training $NetworkState $RunDirectory "$Arch-$Crt" ($BaseRandomSeed + "00")
+        }
         $LocalPgc = @()
         $LocalPgcGroups = @{}
         for ($Iteration = 1; $Iteration -le $EffectiveIterations; $Iteration++) {
