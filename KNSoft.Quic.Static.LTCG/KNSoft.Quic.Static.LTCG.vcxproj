@@ -62,8 +62,7 @@
   <PropertyGroup>
     <IncludePath>$(ProjectDir);$(ProjectDir)..\msquic\src\inc;$(IncludePath)</IncludePath>
     <TargetName>KNSoft.Quic.Static.LTCG.$([System.Version]::Parse('$(VCToolsVersion)').ToString(2))</TargetName>
-    <KNSoftQuicPGDSource Condition="'$(Platform)'=='Win32'">$(ProjectDir)..\msquic\src\bin\winuser\pgo_x86\msquic.pgd</KNSoftQuicPGDSource>
-    <KNSoftQuicPGDSource Condition="'$(Platform)'=='x64'">$(ProjectDir)..\msquic\src\bin\winuser\pgo_x64\msquic.schannel.pgd</KNSoftQuicPGDSource>
+    <KNSoftQuicProfileDirectory>$(ProjectDir)..\PGO\$(KnsoftArch)</KNSoftQuicProfileDirectory>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
@@ -112,9 +111,24 @@
     <ClInclude Include="..\precomp.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-  <!-- Keep profile data beside LTCG libraries for downstream links. -->
-  <Target Name="CopyPgd" AfterTargets="Lib" Condition="'$(KNSoftQuicPGDSource)'!=''">
-    <Copy SourceFiles="$(KNSoftQuicPGDSource)" DestinationFiles="$(OutDir)$(TargetName).pgd" SkipUnchangedFiles="true" />
+  <!-- Keep optional MT and MD profile data beside LTCG libraries for downstream links. -->
+  <Target Name="CopyPgd" AfterTargets="Lib" Condition="Exists('$(KNSoftQuicProfileDirectory)')">
+    <ItemGroup>
+      <KNSoftQuicProfile Include="$(KNSoftQuicProfileDirectory)\MT\KNSoft.Quic.pgd" Condition="Exists('$(KNSoftQuicProfileDirectory)\MT\KNSoft.Quic.pgd')">
+        <Destination>$(OutDir)KNSoft.Quic.Static.LTCG.MT.pgd</Destination>
+      </KNSoftQuicProfile>
+      <KNSoftQuicProfile Include="$(KNSoftQuicProfileDirectory)\MD\KNSoft.Quic.pgd" Condition="Exists('$(KNSoftQuicProfileDirectory)\MD\KNSoft.Quic.pgd')">
+        <Destination>$(OutDir)KNSoft.Quic.Static.LTCG.MD.pgd</Destination>
+      </KNSoftQuicProfile>
+      <KNSoftQuicProfile Include="$(KNSoftQuicProfileDirectory)\manifest.json" Condition="Exists('$(KNSoftQuicProfileDirectory)\manifest.json')">
+        <Destination>$(OutDir)KNSoft.Quic.Static.LTCG.PGO.json</Destination>
+      </KNSoftQuicProfile>
+    </ItemGroup>
+    <Delete Files="$(OutDir)$(TargetName).pgd" />
+    <Copy SourceFiles="@(KNSoftQuicProfile)" DestinationFiles="@(KNSoftQuicProfile->'%(Destination)')" SkipUnchangedFiles="true" />
+    <ItemGroup>
+      <FileWrites Include="@(KNSoftQuicProfile->'%(Destination)')" />
+    </ItemGroup>
   </Target>
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

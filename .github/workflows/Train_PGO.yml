@@ -1,0 +1,62 @@
+name: Train PGO
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  Train:
+    strategy:
+      matrix:
+        include:
+        - os: windows-latest
+          architecture: x86
+          output: x86
+        - os: windows-latest
+          architecture: x64
+          output: x64
+        - os: windows-11-vs2026-arm
+          architecture: arm64
+          output: arm64
+        - os: windows-11-vs2026-arm
+          architecture: arm64ec
+          output: ARM64EC
+      fail-fast: false
+    runs-on: ${{matrix.os}}
+    timeout-minutes: 120
+    steps:
+    - name: Source checkout
+      uses: actions/checkout@v6
+      with:
+        submodules: recursive
+    - name: Install DuoNic
+      shell: pwsh
+      run: .\PGO\Install-DuoNic.ps1
+    - name: Build SecNetPerf
+      shell: pwsh
+      run: .\PGO\Build-SecNetPerf.ps1 -Architecture ${{matrix.architecture}}
+    - name: Train and validate
+      shell: pwsh
+      run: .\PGO\Train.ps1 -Architecture ${{matrix.architecture}}
+    - name: Upload profiles
+      if: ${{always()}}
+      uses: actions/upload-artifact@v7
+      with:
+        name: KNSoft.Quic-PGO-${{matrix.architecture}}
+        path: |
+          PGO/${{matrix.output}}/**/*.pgd
+          PGO/${{matrix.output}}/manifest.json
+        if-no-files-found: warn
+    - name: Upload diagnostics
+      if: ${{always()}}
+      uses: actions/upload-artifact@v7
+      with:
+        name: KNSoft.Quic-PGO-${{matrix.architecture}}-Diagnostics
+        path: |
+          PGO/Temp/**/*.txt
+          PGO/Temp/**/*.csv
+          PGO/Temp/**/*.json
+        if-no-files-found: warn
+        retention-days: 7

@@ -1,0 +1,169 @@
+{
+  "iterations": 2,
+  "localWeight": 3,
+  "emulatedWeight": 1,
+  "scenarios": [
+    {
+      "name": "upload",
+      "preset": "upload",
+      "durationSeconds": 12
+    },
+    {
+      "name": "download",
+      "preset": "download",
+      "durationSeconds": 12
+    },
+    {
+      "name": "upload-multi",
+      "preset": "upload",
+      "durationSeconds": 12,
+      "connections": 4,
+      "streams": 8
+    },
+    {
+      "name": "download-multi",
+      "preset": "download",
+      "durationSeconds": 12,
+      "connections": 4,
+      "streams": 8
+    },
+    {
+      "name": "hps",
+      "preset": "hps",
+      "durationSeconds": 12
+    },
+    {
+      "name": "rps",
+      "preset": "rps",
+      "durationSeconds": 20
+    },
+    {
+      "name": "rps-multi",
+      "preset": "rps-multi",
+      "durationSeconds": 20
+    },
+    {
+      "name": "latency",
+      "preset": "latency",
+      "durationSeconds": 20
+    }
+  ],
+  "emulatedNetwork": {
+    "mode": "Auto",
+    "iterations": 1,
+    "clientAddress": "192.168.1.12",
+    "serverAddress": "192.168.1.11",
+    "scenarios": [
+      "upload",
+      "download",
+      "rps",
+      "latency"
+    ],
+    "profiles": [
+      {
+        "name": "lan-cubic",
+        "rttMs": 5,
+        "rateMbps": 1000,
+        "queueRatio": 1.0,
+        "lossDenominator": 0,
+        "reorderDenominator": 0,
+        "reorderDelayMs": 0,
+        "pacing": true,
+        "congestionControl": "cubic"
+      },
+      {
+        "name": "wan-cubic",
+        "clientAddress": "fc00::1:12",
+        "serverAddress": "fc00::1:11",
+        "rttMs": 50,
+        "rateMbps": 100,
+        "queueRatio": 1.0,
+        "lossDenominator": 0,
+        "reorderDenominator": 0,
+        "reorderDelayMs": 0,
+        "pacing": true,
+        "congestionControl": "cubic"
+      },
+      {
+        "name": "wan-loss",
+        "rttMs": 50,
+        "rateMbps": 100,
+        "queueRatio": 0.2,
+        "lossDenominator": 1000,
+        "reorderDenominator": 0,
+        "reorderDelayMs": 0,
+        "pacing": true,
+        "congestionControl": "cubic",
+        "scenarios": [
+          "upload",
+          "download",
+          "rps",
+          "latency",
+          {
+            "name": "hps",
+            "connections": 64
+          }
+        ]
+      },
+      {
+        "name": "wan-reorder",
+        "rttMs": 50,
+        "rateMbps": 100,
+        "queueRatio": 1.0,
+        "lossDenominator": 0,
+        "reorderDenominator": 1000,
+        "reorderDelayMs": 5,
+        "pacing": true,
+        "congestionControl": "cubic"
+      },
+      {
+        "name": "longhaul-bbr",
+        "rttMs": 200,
+        "rateMbps": 50,
+        "queueRatio": 5.0,
+        "lossDenominator": 10000,
+        "reorderDenominator": 0,
+        "reorderDelayMs": 0,
+        "pacing": true,
+        "congestionControl": "bbr",
+        "scenarios": [
+          "upload",
+          "download",
+          "rps",
+          "latency",
+          {
+            "name": "hps",
+            "connections": 64
+          }
+        ]
+      },
+      {
+        "name": "unpaced-cubic",
+        "rttMs": 50,
+        "rateMbps": 10,
+        "queueRatio": 1.0,
+        "lossDenominator": 0,
+        "reorderDenominator": 0,
+        "reorderDelayMs": 0,
+        "pacing": false,
+        "congestionControl": "cubic"
+      }
+    ]
+  },
+  "validation": {
+    "iterations": 5,
+    "durationSeconds": 5,
+    "minimumProfiledFunctionsPercent": 99.0,
+    "minimumProfiledInstructionsPercent": 99.0,
+    "allowedRegressionPercent": 2.0,
+    "scenarios": [
+      "upload",
+      "download",
+      "upload-multi",
+      "download-multi",
+      "hps",
+      "rps",
+      "latency"
+    ]
+  }
+}
