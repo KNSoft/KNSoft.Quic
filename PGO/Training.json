@@ -1,5 +1,5 @@
 {
-  "iterations": 2,
+  "iterations": 5,
   "localWeight": 3,
   "emulatedWeight": 1,
   "scenarios": [
@@ -55,7 +55,7 @@
   ],
   "emulatedNetwork": {
     "mode": "Auto",
-    "iterations": 1,
+    "iterations": 2,
     "clientAddress": "192.168.1.12",
     "serverAddress": "192.168.1.11",
     "scenarios": [

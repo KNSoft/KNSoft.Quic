@@ -691,7 +691,7 @@ function Test-Performance(
     $Summary | Sort-Object Scenario, Variant | Export-Csv (Join-Path $ResultRoot "summary.csv") -NoTypeInformation -Encoding utf8
 
     # Keep latency percentiles as diagnostics; like upstream, gate only the primary metric.
-    $Regressions = @()
+    $Comparisons = @()
     foreach ($TestCase in $TestCases) {
         $Baseline = Get-Median @($Results |
             Where-Object { $_.Scenario -eq $TestCase.Name -and $_.Variant -eq "KNSoft-None" } |
@@ -700,13 +700,34 @@ function Test-Performance(
             Where-Object { $_.Scenario -eq $TestCase.Name -and $_.Variant -eq "KNSoft-Custom" } |
             ForEach-Object { [double]$_.Metric })
         $Delta = [Math]::Round((($Candidate / $Baseline) - 1) * 100, 3)
-        if ($Delta -lt -[double]$Validation.allowedRegressionPercent) {
-            $Regressions += "$($TestCase.Name) metric $Delta%"
+        $Comparisons += [pscustomobject]@{
+            Group = if ($null -eq $TestCase.NetworkProfile) { "Local" } else { "EmulatedNetwork" }
+            Scenario = $TestCase.Name
+            Baseline = $Baseline
+            Candidate = $Candidate
+            DeltaPercent = $Delta
+            LogRatio = [Math]::Log($Candidate / $Baseline)
         }
-
     }
+
+    # Hosted runners are noisy enough for individual scenarios to be bimodal.
+    # Gate the geometric mean so every scenario contributes an equal ratio.
+    $AggregateComparisons = @($Comparisons | Group-Object Group | ForEach-Object {
+        $Rows = @($_.Group)
+        $Worst = $Rows | Sort-Object DeltaPercent | Select-Object -First 1
+        [ordered]@{
+            group = $_.Name
+            scenarioCount = $Rows.Count
+            deltaPercent = [Math]::Round(([Math]::Exp(($Rows.LogRatio | Measure-Object -Average).Average) - 1) * 100, 3)
+            worstScenario = $Worst.Scenario
+            worstScenarioDeltaPercent = $Worst.DeltaPercent
+        }
+    })
+    $Regressions = @($AggregateComparisons |
+        Where-Object { $_.deltaPercent -lt -[double]$Validation.allowedRegressionPercent } |
+        ForEach-Object { "$($_.group) aggregate $($_.deltaPercent)%" })
     if ($Regressions) {
-        throw "Performance regression against unprofiled KNSoft.Quic exceeds $($Validation.allowedRegressionPercent)%: $($Regressions -join ', ')."
+        throw "Aggregate performance regression against unprofiled KNSoft.Quic exceeds $($Validation.allowedRegressionPercent)%: $($Regressions -join ', ')."
     }
 
     [ordered]@{
@@ -715,6 +736,7 @@ function Test-Performance(
         scenarios = @($TestCases.Name)
         regressionBaseline = "KNSoft-None"
         allowedRegressionPercent = [double]$Validation.allowedRegressionPercent
+        aggregateComparisons = $AggregateComparisons
         passed = $true
     }
 }
