@@ -1,0 +1,109 @@
+name: Train PGO
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  Train:
+    strategy:
+      matrix:
+        include:
+        - os: windows-latest
+          architecture: x86
+          output: x86
+        - os: windows-latest
+          architecture: x64
+          output: x64
+        - os: windows-11-vs2026-arm
+          architecture: arm64
+          output: ARM64
+        - os: windows-11-vs2026-arm
+          architecture: arm64ec
+          output: ARM64EC
+      fail-fast: false
+    runs-on: ${{matrix.os}}
+    timeout-minutes: 240
+    steps:
+    - name: Source checkout
+      uses: actions/checkout@v6
+      with:
+        submodules: recursive
+    - name: Install DuoNic
+      shell: pwsh
+      run: .\PGO\Install-DuoNic.ps1
+    - name: Build SecNetPerf
+      shell: pwsh
+      run: .\PGO\Build-SecNetPerf.ps1 -Architecture ${{matrix.architecture}}
+    - name: Train and validate
+      shell: pwsh
+      run: .\PGO\Train.ps1 -Architecture ${{matrix.architecture}}
+    - name: Upload profiles
+      if: ${{always()}}
+      uses: actions/upload-artifact@v7
+      with:
+        name: KNSoft.Quic-PGO-${{matrix.architecture}}
+        path: |
+          PGO/${{matrix.output}}/**/*.pgd
+          PGO/${{matrix.output}}/manifest.json
+        if-no-files-found: warn
+    - name: Upload diagnostics
+      if: ${{always()}}
+      uses: actions/upload-artifact@v7
+      with:
+        name: KNSoft.Quic-PGO-${{matrix.architecture}}-Diagnostics
+        path: |
+          PGO/Temp/**/*.txt
+          PGO/Temp/**/*.csv
+          PGO/Temp/**/*.json
+        if-no-files-found: warn
+        retention-days: 7
+  PublishProfiles:
+    needs: Train
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+    - name: Source checkout
+      uses: actions/checkout@v6
+      with:
+        ref: main
+    - name: Download x86 profiles
+      uses: actions/download-artifact@v8
+      with:
+        name: KNSoft.Quic-PGO-x86
+        path: PGO/x86
+    - name: Download x64 profiles
+      uses: actions/download-artifact@v8
+      with:
+        name: KNSoft.Quic-PGO-x64
+        path: PGO/x64
+    - name: Download ARM64 profiles
+      uses: actions/download-artifact@v8
+      with:
+        name: KNSoft.Quic-PGO-arm64
+        path: PGO/ARM64
+    - name: Download ARM64EC profiles
+      uses: actions/download-artifact@v8
+      with:
+        name: KNSoft.Quic-PGO-arm64ec
+        path: PGO/ARM64EC
+    - name: Create pull request
+      uses: peter-evans/create-pull-request@v8
+      with:
+        token: ${{secrets.GITHUB_TOKEN}}
+        base: main
+        branch: pgo/trained-profiles
+        delete-branch: true
+        commit-message: "[PGO] Update trained profiles"
+        title: "[PGO] Update trained profiles"
+        body: |
+          Updates the trained PGO profiles generated from `${{github.sha}}`.
+
+          Workflow run: https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}
+        add-paths: |
+          PGO/**/*.pgd
+          PGO/**/manifest.json
