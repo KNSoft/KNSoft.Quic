@@ -34,6 +34,10 @@ jobs:
     - name: Install DuoNic
       shell: pwsh
       run: .\PGO\Install-DuoNic.ps1
+    - name: Prepare MSBuild
+      uses: microsoft/setup-msbuild@main
+    - name: Restore NuGet packages
+      run: msbuild .\KNSoft.Quic.slnx /t:Restore /m /p:Configuration=Release /p:Platform=${{matrix.output}} /p:RestorePackagesConfig=true
     - name: Build SecNetPerf
       shell: pwsh
       run: .\PGO\Build-SecNetPerf.ps1 -Architecture ${{matrix.architecture}}
