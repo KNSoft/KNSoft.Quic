@@ -144,8 +144,13 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <KNSoftQuicStaticLTCGLibrary>$(SolutionDir)OutDir\$(KnsoftArch)\Release\KNSoft.Quic.Static.LTCG.$([System.Version]::Parse('$(VCToolsVersion)').ToString(2)).lib</KNSoftQuicStaticLTCGLibrary>
-    <KNSoftQuicStaticLTCGPGD>$(SolutionDir)OutDir\$(KnsoftArch)\Release\KNSoft.Quic.Static.LTCG.$([System.Version]::Parse('$(VCToolsVersion)').ToString(2)).pgd</KNSoftQuicStaticLTCGPGD>
-    <KNSoftQuicPGD Condition="$(Configuration.Contains(`Release`)) and ('$(Platform)'=='Win32' or '$(Platform)'=='x64')">$(IntDir)$(TargetName).pgd</KNSoftQuicPGD>
+    <KNSoftQuicPGOMode Condition="'$(KNSoftQuicPGOMode)'=='' and $(Configuration.Contains(`Release`)) and ('$(Platform)'=='Win32' or '$(Platform)'=='x64')">Custom</KNSoftQuicPGOMode>
+    <KNSoftQuicRuntime Condition="$(Configuration.Contains(`MD`))">MD</KNSoftQuicRuntime>
+    <KNSoftQuicRuntime Condition="!$(Configuration.Contains(`MD`))">MT</KNSoftQuicRuntime>
+    <KNSoftQuicPGD>$(IntDir)$(TargetName).pgd</KNSoftQuicPGD>
+    <KNSoftQuicCustomPGD>$(SolutionDir)PGO\$(KnsoftArch)\$(KNSoftQuicRuntime)\KNSoft.Quic.pgd</KNSoftQuicCustomPGD>
+    <KNSoftQuicUpstreamPGD Condition="'$(Platform)'=='Win32'">$(SolutionDir)msquic\src\bin\winuser\pgo_x86\msquic.pgd</KNSoftQuicUpstreamPGD>
+    <KNSoftQuicUpstreamPGD Condition="'$(Platform)'=='x64'">$(SolutionDir)msquic\src\bin\winuser\pgo_x64\msquic.schannel.pgd</KNSoftQuicUpstreamPGD>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <IncludePath>$(ProjectDir)..\msquic\src\inc;$(IncludePath)</IncludePath>
@@ -328,8 +333,20 @@
       <EnableSegmentHeap>true</EnableSegmentHeap>
     </Manifest>
   </ItemDefinitionGroup>
-  <!-- Allow the unity-build LTCG input to reuse upstream MsQuic profiles. -->
-  <ItemDefinitionGroup Condition="$(Configuration.Contains(`Release`)) and ('$(Platform)'=='Win32' or '$(Platform)'=='x64')">
+  <ItemDefinitionGroup Condition="'$(KNSoftQuicPGOMode)'=='Instrument'">
+    <Link>
+      <LinkTimeCodeGeneration>PGInstrument</LinkTimeCodeGeneration>
+      <ProfileGuidedDatabase>$(KNSoftQuicPGD)</ProfileGuidedDatabase>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(KNSoftQuicPGOMode)'=='Custom'">
+    <Link>
+      <LinkTimeCodeGeneration>PGOptimization</LinkTimeCodeGeneration>
+      <ProfileGuidedDatabase>$(KNSoftQuicPGD)</ProfileGuidedDatabase>
+    </Link>
+  </ItemDefinitionGroup>
+  <!-- Upstream profiles were trained from a different final image. -->
+  <ItemDefinitionGroup Condition="'$(KNSoftQuicPGOMode)'=='Upstream'">
     <Link>
       <LinkTimeCodeGeneration>PGOptimization</LinkTimeCodeGeneration>
       <ProfileGuidedDatabase>$(KNSoftQuicPGD)</ProfileGuidedDatabase>
@@ -346,8 +363,19 @@
     <None Include="KNSoft.Quic.def" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-  <Target Name="CopyPgdForLink" BeforeTargets="Link" Condition="'$(KNSoftQuicPGD)'!=''">
-    <Copy SourceFiles="$(KNSoftQuicStaticLTCGPGD)" DestinationFiles="$(KNSoftQuicPGD)" />
+  <Target Name="ValidatePgoMode" BeforeTargets="Link">
+    <Error Text="Unsupported KNSoftQuicPGOMode: $(KNSoftQuicPGOMode)" Condition="'$(KNSoftQuicPGOMode)'!='' and '$(KNSoftQuicPGOMode)'!='None' and '$(KNSoftQuicPGOMode)'!='Upstream' and '$(KNSoftQuicPGOMode)'!='Instrument' and '$(KNSoftQuicPGOMode)'!='Custom'" />
+  </Target>
+  <Target Name="PreparePgdForLink" BeforeTargets="Link" Condition="'$(KNSoftQuicPGOMode)'=='Custom' or '$(KNSoftQuicPGOMode)'=='Upstream'">
+    <PropertyGroup>
+      <KNSoftQuicPGDSource Condition="'$(KNSoftQuicPGOMode)'=='Custom'">$(KNSoftQuicCustomPGD)</KNSoftQuicPGDSource>
+      <KNSoftQuicPGDSource Condition="'$(KNSoftQuicPGOMode)'=='Upstream'">$(KNSoftQuicUpstreamPGD)</KNSoftQuicPGDSource>
+    </PropertyGroup>
+    <Error Text="PGO database not found: $(KNSoftQuicPGDSource)" Condition="!Exists('$(KNSoftQuicPGDSource)')" />
+    <Copy SourceFiles="$(KNSoftQuicPGDSource)" DestinationFiles="$(KNSoftQuicPGD)" />
+  </Target>
+  <Target Name="CleanPgdForInstrumentation" BeforeTargets="Link" Condition="'$(KNSoftQuicPGOMode)'=='Instrument'">
+    <Delete Files="$(KNSoftQuicPGD)" />
   </Target>
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

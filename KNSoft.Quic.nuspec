@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2013/01/nuspec.xsd">
   <metadata>
     <id>KNSoft.Quic</id>
@@ -25,7 +25,11 @@
 
     <file src="OutDir\**\*.lib" exclude="OutDir\x86\**" target="build\Lib\" />
     <file src="OutDir\**\*.pdb" exclude="OutDir\x86\**" target="build\Lib\" />
+    <file src="OutDir\**\*.pgd" exclude="OutDir\x86\**" target="build\Lib\" />
+    <file src="OutDir\**\*PGO.json" exclude="OutDir\x86\**" target="build\Lib\" />
     <file src="OutDir\x86\**\*.lib" target="build\Lib\Win32\" />
     <file src="OutDir\x86\**\*.pdb" exclude="OutDir\x86\**\Demo.pdb" target="build\Lib\Win32\" />
+    <file src="OutDir\x86\**\*.pgd" target="build\Lib\Win32\" />
+    <file src="OutDir\x86\**\*PGO.json" target="build\Lib\Win32\" />
   </files>
 </package>
