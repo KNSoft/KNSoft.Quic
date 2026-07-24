@@ -708,6 +708,9 @@ function Test-Performance(
                 Where-Object { $_.Scenario -eq $TestCase.Name -and $_.Variant -eq "KNSoft-Custom" -and $_.Iteration -eq $Iteration }).Metric
             [Math]::Log($Candidate / $Baseline)
         })
+        if ($LogRatios.Count -ge 5) {
+            $LogRatios = @($LogRatios | Sort-Object)[1..($LogRatios.Count - 2)]
+        }
         $Delta = [Math]::Round(([Math]::Exp(($LogRatios | Measure-Object -Average).Average) - 1) * 100, 3)
         $Comparisons += [pscustomobject]@{
             Group = if ($null -eq $TestCase.NetworkProfile) { "Local" } else { "EmulatedNetwork" }
@@ -717,8 +720,8 @@ function Test-Performance(
         }
     }
 
-    # Pair each iteration to control drift and avoid choosing different modes from
-    # bimodal results. Gate the geometric mean so every sample contributes equally.
+    # Pair each iteration to control drift, trim one result from each tail, and
+    # gate the geometric mean so bimodal results and single outliers stay stable.
     $AggregateComparisons = @($Comparisons | Group-Object Group | ForEach-Object {
         $Rows = @($_.Group)
         $Worst = $Rows | Sort-Object DeltaPercent | Select-Object -First 1
