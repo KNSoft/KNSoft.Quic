@@ -156,7 +156,7 @@
     ]
   },
   "validation": {
-    "iterations": 5,
+    "iterations": 11,
     "durationSeconds": 5,
     "minimumProfiledFunctionsPercent": 99.0,
     "minimumProfiledInstructionsPercent": 99.0,
