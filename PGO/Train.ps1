@@ -700,32 +700,33 @@ function Test-Performance(
     # Keep latency percentiles as diagnostics; like upstream, gate only the primary metric.
     $Comparisons = @()
     foreach ($TestCase in $TestCases) {
-        $Baseline = Get-Median @($Results |
-            Where-Object { $_.Scenario -eq $TestCase.Name -and $_.Variant -eq "KNSoft-None" } |
-            ForEach-Object { [double]$_.Metric })
-        $Candidate = Get-Median @($Results |
-            Where-Object { $_.Scenario -eq $TestCase.Name -and $_.Variant -eq "KNSoft-Custom" } |
-            ForEach-Object { [double]$_.Metric })
-        $Delta = [Math]::Round((($Candidate / $Baseline) - 1) * 100, 3)
+        $LogRatios = @(1..[int]$Validation.iterations | ForEach-Object {
+            $Iteration = $_
+            $Baseline = [double]($Results |
+                Where-Object { $_.Scenario -eq $TestCase.Name -and $_.Variant -eq "KNSoft-None" -and $_.Iteration -eq $Iteration }).Metric
+            $Candidate = [double]($Results |
+                Where-Object { $_.Scenario -eq $TestCase.Name -and $_.Variant -eq "KNSoft-Custom" -and $_.Iteration -eq $Iteration }).Metric
+            [Math]::Log($Candidate / $Baseline)
+        })
+        $Delta = [Math]::Round(([Math]::Exp(($LogRatios | Measure-Object -Average).Average) - 1) * 100, 3)
         $Comparisons += [pscustomobject]@{
             Group = if ($null -eq $TestCase.NetworkProfile) { "Local" } else { "EmulatedNetwork" }
             Scenario = $TestCase.Name
-            Baseline = $Baseline
-            Candidate = $Candidate
             DeltaPercent = $Delta
-            LogRatio = [Math]::Log($Candidate / $Baseline)
+            LogRatios = $LogRatios
         }
     }
 
-    # Hosted runners are noisy enough for individual scenarios to be bimodal.
-    # Gate the geometric mean so every scenario contributes an equal ratio.
+    # Pair each iteration to control drift and avoid choosing different modes from
+    # bimodal results. Gate the geometric mean so every sample contributes equally.
     $AggregateComparisons = @($Comparisons | Group-Object Group | ForEach-Object {
         $Rows = @($_.Group)
         $Worst = $Rows | Sort-Object DeltaPercent | Select-Object -First 1
+        $LogRatios = @($Rows | ForEach-Object { $_.LogRatios })
         [ordered]@{
             group = $_.Name
             scenarioCount = $Rows.Count
-            deltaPercent = [Math]::Round(([Math]::Exp(($Rows.LogRatio | Measure-Object -Average).Average) - 1) * 100, 3)
+            deltaPercent = [Math]::Round(([Math]::Exp(($LogRatios | Measure-Object -Average).Average) - 1) * 100, 3)
             worstScenario = $Worst.Scenario
             worstScenarioDeltaPercent = $Worst.DeltaPercent
         }
