@@ -1,0 +1,622 @@
+{
+  "schemaVersion": 1,
+  "generatedAtUtc": "2026-07-24T09:01:37.0593651Z",
+  "architecture": "x86",
+  "tls": "Schannel",
+  "datapath": "Winsock/IOCP",
+  "host": {
+    "os": "Microsoft Windows 10.0.26100",
+    "architecture": "X64",
+    "processorCount": 4
+  },
+  "profiles": [
+    {
+      "runtime": "MT",
+      "configuration": "Release",
+      "pgd": "MT/KNSoft.Quic.pgd",
+      "pgdSize": 2781184,
+      "pgdSha256": "367ffc29575df4cccdf3ec980986e37e475e2d49e41bc2a69c6bdcc7d7195806",
+      "pgcCount": 184,
+      "generatedAtUtc": "2026-07-24T09:01:20.1293523Z",
+      "repositoryCommit": "0786c69f5c93f8d0a4265f388c4952d528ac5301",
+      "repositoryDirty": false,
+      "msquicCommit": "1739655ec833da2f338b61b8c904e147699246ab",
+      "msquicDirty": false,
+      "visualStudioVersion": "18.7.11925.98",
+      "vcToolsVersion": "14.51.36231",
+      "training": {
+        "localIterations": 5,
+        "localWeight": 3,
+        "scenarios": [
+          {
+            "name": "upload",
+            "preset": "upload",
+            "durationSeconds": 12,
+            "weight": 2
+          },
+          {
+            "name": "download",
+            "preset": "download",
+            "durationSeconds": 12,
+            "weight": 2
+          },
+          {
+            "name": "upload-multi",
+            "preset": "upload",
+            "durationSeconds": 12,
+            "connections": 4,
+            "streams": 8,
+            "weight": 2
+          },
+          {
+            "name": "download-multi",
+            "preset": "download",
+            "durationSeconds": 12,
+            "connections": 4,
+            "streams": 8,
+            "weight": 4
+          },
+          {
+            "name": "hps",
+            "preset": "hps",
+            "durationSeconds": 12,
+            "weight": 2
+          },
+          {
+            "name": "rps",
+            "preset": "rps",
+            "durationSeconds": 20
+          },
+          {
+            "name": "rps-multi",
+            "preset": "rps-multi",
+            "durationSeconds": 20
+          },
+          {
+            "name": "latency",
+            "preset": "latency",
+            "durationSeconds": 20
+          }
+        ],
+        "emulatedNetwork": {
+          "requestedMode": "Auto",
+          "enabled": true,
+          "weight": 1,
+          "runs": [
+            {
+              "profile": "lan-cubic",
+              "iteration": 1,
+              "clientAddress": "192.168.1.12",
+              "serverAddress": "192.168.1.11",
+              "scenarios": [
+                "upload",
+                "download",
+                "rps",
+                "latency"
+              ],
+              "randomSeed": "41473a2e60b6958500ec0add7dcfb900",
+              "bufferPackets": 458
+            },
+            {
+              "profile": "lan-cubic",
+              "iteration": 2,
+              "clientAddress": "192.168.1.12",
+              "serverAddress": "192.168.1.11",
+              "scenarios": [
+                "upload",
+                "download",
+                "rps",
+                "latency"
+              ],
+              "randomSeed": "41473a2e60b6958500ec0add7dcfb901",
+              "bufferPackets": 458
+            },
+            {
+              "profile": "wan-cubic",
+              "iteration": 1,
+              "clientAddress": "fc00::1:12",
+              "serverAddress": "fc00::1:11",
+              "scenarios": [
+                "upload",
+                "download",
+                "rps",
+                "latency"
+              ],
+              "randomSeed": "41473a2e60b6958500ec0add7dcfb902",
+              "bufferPackets": 458
+            },
+            {
+              "profile": "wan-cubic",
+              "iteration": 2,
+              "clientAddress": "fc00::1:12",
+              "serverAddress": "fc00::1:11",
+              "scenarios": [
+                "upload",
+                "download",
+                "rps",
+                "latency"
+              ],
+              "randomSeed": "41473a2e60b6958500ec0add7dcfb903",
+              "bufferPackets": 458
+            },
+            {
+              "profile": "wan-loss",
+              "iteration": 1,
+              "clientAddress": "192.168.1.12",
+              "serverAddress": "192.168.1.11",
+              "scenarios": [
+                "upload",
+                "download",
+                "rps",
+                "latency",
+                {
+                  "name": "hps",
+                  "connections": 64
+                }
+              ],
+              "randomSeed": "41473a2e60b6958500ec0add7dcfb904",
+              "bufferPackets": 92
+            },
+            {
+              "profile": "wan-loss",
+              "iteration": 2,
+              "clientAddress": "192.168.1.12",
+              "serverAddress": "192.168.1.11",
+              "scenarios": [
+                "upload",
+                "download",
+                "rps",
+                "latency",
+                {
+                  "name": "hps",
+                  "connections": 64
+                }
+              ],
+              "randomSeed": "41473a2e60b6958500ec0add7dcfb905",
+              "bufferPackets": 92
+            },
+            {
+              "profile": "wan-reorder",
+              "iteration": 1,
+              "clientAddress": "192.168.1.12",
+              "serverAddress": "192.168.1.11",
+              "scenarios": [
+                "upload",
+                "download",
+                "rps",
+                "latency"
+              ],
+              "randomSeed": "41473a2e60b6958500ec0add7dcfb906",
+              "bufferPackets": 458
+            },
+            {
+              "profile": "wan-reorder",
+              "iteration": 2,
+              "clientAddress": "192.168.1.12",
+              "serverAddress": "192.168.1.11",
+              "scenarios": [
+                "upload",
+                "download",
+                "rps",
+                "latency"
+              ],
+              "randomSeed": "41473a2e60b6958500ec0add7dcfb907",
+              "bufferPackets": 458
+            },
+            {
+              "profile": "longhaul-bbr",
+              "iteration": 1,
+              "clientAddress": "192.168.1.12",
+              "serverAddress": "192.168.1.11",
+              "scenarios": [
+                "upload",
+                "download",
+                "rps",
+                "latency",
+                {
+                  "name": "hps",
+                  "connections": 64
+                }
+              ],
+              "randomSeed": "41473a2e60b6958500ec0add7dcfb908",
+              "bufferPackets": 4583
+            },
+            {
+              "profile": "longhaul-bbr",
+              "iteration": 2,
+              "clientAddress": "192.168.1.12",
+              "serverAddress": "192.168.1.11",
+              "scenarios": [
+                "upload",
+                "download",
+                "rps",
+                "latency",
+                {
+                  "name": "hps",
+                  "connections": 64
+                }
+              ],
+              "randomSeed": "41473a2e60b6958500ec0add7dcfb909",
+              "bufferPackets": 4583
+            },
+            {
+              "profile": "unpaced-cubic",
+              "iteration": 1,
+              "clientAddress": "192.168.1.12",
+              "serverAddress": "192.168.1.11",
+              "scenarios": [
+                "upload",
+                "download",
+                "rps",
+                "latency"
+              ],
+              "randomSeed": "41473a2e60b6958500ec0add7dcfb90a",
+              "bufferPackets": 46
+            },
+            {
+              "profile": "unpaced-cubic",
+              "iteration": 2,
+              "clientAddress": "192.168.1.12",
+              "serverAddress": "192.168.1.11",
+              "scenarios": [
+                "upload",
+                "download",
+                "rps",
+                "latency"
+              ],
+              "randomSeed": "41473a2e60b6958500ec0add7dcfb90b",
+              "bufferPackets": 46
+            }
+          ]
+        }
+      },
+      "buildValidation": {
+        "profiledFunctions": 1131,
+        "totalFunctions": 1134,
+        "profiledFunctionsPercent": 99.7,
+        "profiledInstructionsPercent": 100.0,
+        "dllSize": 353280,
+        "dllSha256": "0e5f7e56af1e477bc0761540602b9194fad2aeafad0fe708d3b83c827c7295be"
+      },
+      "performanceValidation": {
+        "iterations": 11,
+        "durationSeconds": 5,
+        "scenarios": [
+          "upload",
+          "download",
+          "upload-multi",
+          "download-multi",
+          "hps",
+          "rps",
+          "latency",
+          "network-wan-loss-download",
+          "network-wan-reorder-rps",
+          "network-longhaul-bbr-latency"
+        ],
+        "regressionBaseline": "KNSoft-None",
+        "allowedRegressionPercent": 2.0,
+        "aggregateComparisons": [
+          {
+            "group": "EmulatedNetwork",
+            "scenarioCount": 3,
+            "deltaPercent": 0.045,
+            "worstScenario": "network-longhaul-bbr-latency",
+            "worstScenarioDeltaPercent": 0.0
+          },
+          {
+            "group": "Local",
+            "scenarioCount": 7,
+            "deltaPercent": 0.097,
+            "worstScenario": "download-multi",
+            "worstScenarioDeltaPercent": -8.065
+          }
+        ],
+        "passed": true
+      }
+    },
+    {
+      "runtime": "MD",
+      "configuration": "ReleaseMD",
+      "pgd": "MD/KNSoft.Quic.pgd",
+      "pgdSize": 2797568,
+      "pgdSha256": "fdfb61602522aaa0837915c0ebccf2d2981b51e7af8004e12f47e2b667f044de",
+      "pgcCount": 184,
+      "generatedAtUtc": "2026-07-24T09:01:37.0593651Z",
+      "repositoryCommit": "0786c69f5c93f8d0a4265f388c4952d528ac5301",
+      "repositoryDirty": false,
+      "msquicCommit": "1739655ec833da2f338b61b8c904e147699246ab",
+      "msquicDirty": false,
+      "visualStudioVersion": "18.7.11925.98",
+      "vcToolsVersion": "14.51.36231",
+      "training": {
+        "localIterations": 5,
+        "localWeight": 3,
+        "scenarios": [
+          {
+            "name": "upload",
+            "preset": "upload",
+            "durationSeconds": 12,
+            "weight": 2
+          },
+          {
+            "name": "download",
+            "preset": "download",
+            "durationSeconds": 12,
+            "weight": 2
+          },
+          {
+            "name": "upload-multi",
+            "preset": "upload",
+            "durationSeconds": 12,
+            "connections": 4,
+            "streams": 8,
+            "weight": 2
+          },
+          {
+            "name": "download-multi",
+            "preset": "download",
+            "durationSeconds": 12,
+            "connections": 4,
+            "streams": 8,
+            "weight": 4
+          },
+          {
+            "name": "hps",
+            "preset": "hps",
+            "durationSeconds": 12,
+            "weight": 2
+          },
+          {
+            "name": "rps",
+            "preset": "rps",
+            "durationSeconds": 20
+          },
+          {
+            "name": "rps-multi",
+            "preset": "rps-multi",
+            "durationSeconds": 20
+          },
+          {
+            "name": "latency",
+            "preset": "latency",
+            "durationSeconds": 20
+          }
+        ],
+        "emulatedNetwork": {
+          "requestedMode": "Auto",
+          "enabled": true,
+          "weight": 1,
+          "runs": [
+            {
+              "profile": "lan-cubic",
+              "iteration": 1,
+              "clientAddress": "192.168.1.12",
+              "serverAddress": "192.168.1.11",
+              "scenarios": [
+                "upload",
+                "download",
+                "rps",
+                "latency"
+              ],
+              "randomSeed": "41473a2e60b6958500ec0add7dcfb900",
+              "bufferPackets": 458
+            },
+            {
+              "profile": "lan-cubic",
+              "iteration": 2,
+              "clientAddress": "192.168.1.12",
+              "serverAddress": "192.168.1.11",
+              "scenarios": [
+                "upload",
+                "download",
+                "rps",
+                "latency"
+              ],
+              "randomSeed": "41473a2e60b6958500ec0add7dcfb901",
+              "bufferPackets": 458
+            },
+            {
+              "profile": "wan-cubic",
+              "iteration": 1,
+              "clientAddress": "fc00::1:12",
+              "serverAddress": "fc00::1:11",
+              "scenarios": [
+                "upload",
+                "download",
+                "rps",
+                "latency"
+              ],
+              "randomSeed": "41473a2e60b6958500ec0add7dcfb902",
+              "bufferPackets": 458
+            },
+            {
+              "profile": "wan-cubic",
+              "iteration": 2,
+              "clientAddress": "fc00::1:12",
+              "serverAddress": "fc00::1:11",
+              "scenarios": [
+                "upload",
+                "download",
+                "rps",
+                "latency"
+              ],
+              "randomSeed": "41473a2e60b6958500ec0add7dcfb903",
+              "bufferPackets": 458
+            },
+            {
+              "profile": "wan-loss",
+              "iteration": 1,
+              "clientAddress": "192.168.1.12",
+              "serverAddress": "192.168.1.11",
+              "scenarios": [
+                "upload",
+                "download",
+                "rps",
+                "latency",
+                {
+                  "name": "hps",
+                  "connections": 64
+                }
+              ],
+              "randomSeed": "41473a2e60b6958500ec0add7dcfb904",
+              "bufferPackets": 92
+            },
+            {
+              "profile": "wan-loss",
+              "iteration": 2,
+              "clientAddress": "192.168.1.12",
+              "serverAddress": "192.168.1.11",
+              "scenarios": [
+                "upload",
+                "download",
+                "rps",
+                "latency",
+                {
+                  "name": "hps",
+                  "connections": 64
+                }
+              ],
+              "randomSeed": "41473a2e60b6958500ec0add7dcfb905",
+              "bufferPackets": 92
+            },
+            {
+              "profile": "wan-reorder",
+              "iteration": 1,
+              "clientAddress": "192.168.1.12",
+              "serverAddress": "192.168.1.11",
+              "scenarios": [
+                "upload",
+                "download",
+                "rps",
+                "latency"
+              ],
+              "randomSeed": "41473a2e60b6958500ec0add7dcfb906",
+              "bufferPackets": 458
+            },
+            {
+              "profile": "wan-reorder",
+              "iteration": 2,
+              "clientAddress": "192.168.1.12",
+              "serverAddress": "192.168.1.11",
+              "scenarios": [
+                "upload",
+                "download",
+                "rps",
+                "latency"
+              ],
+              "randomSeed": "41473a2e60b6958500ec0add7dcfb907",
+              "bufferPackets": 458
+            },
+            {
+              "profile": "longhaul-bbr",
+              "iteration": 1,
+              "clientAddress": "192.168.1.12",
+              "serverAddress": "192.168.1.11",
+              "scenarios": [
+                "upload",
+                "download",
+                "rps",
+                "latency",
+                {
+                  "name": "hps",
+                  "connections": 64
+                }
+              ],
+              "randomSeed": "41473a2e60b6958500ec0add7dcfb908",
+              "bufferPackets": 4583
+            },
+            {
+              "profile": "longhaul-bbr",
+              "iteration": 2,
+              "clientAddress": "192.168.1.12",
+              "serverAddress": "192.168.1.11",
+              "scenarios": [
+                "upload",
+                "download",
+                "rps",
+                "latency",
+                {
+                  "name": "hps",
+                  "connections": 64
+                }
+              ],
+              "randomSeed": "41473a2e60b6958500ec0add7dcfb909",
+              "bufferPackets": 4583
+            },
+            {
+              "profile": "unpaced-cubic",
+              "iteration": 1,
+              "clientAddress": "192.168.1.12",
+              "serverAddress": "192.168.1.11",
+              "scenarios": [
+                "upload",
+                "download",
+                "rps",
+                "latency"
+              ],
+              "randomSeed": "41473a2e60b6958500ec0add7dcfb90a",
+              "bufferPackets": 46
+            },
+            {
+              "profile": "unpaced-cubic",
+              "iteration": 2,
+              "clientAddress": "192.168.1.12",
+              "serverAddress": "192.168.1.11",
+              "scenarios": [
+                "upload",
+                "download",
+                "rps",
+                "latency"
+              ],
+              "randomSeed": "41473a2e60b6958500ec0add7dcfb90b",
+              "bufferPackets": 46
+            }
+          ]
+        }
+      },
+      "buildValidation": {
+        "profiledFunctions": 1131,
+        "totalFunctions": 1134,
+        "profiledFunctionsPercent": 99.7,
+        "profiledInstructionsPercent": 100.0,
+        "dllSize": 268288,
+        "dllSha256": "ad1f91e1925ed202eeee8510e0a14be1100b7845cc08449c099b5d349865247b"
+      },
+      "performanceValidation": {
+        "iterations": 11,
+        "durationSeconds": 5,
+        "scenarios": [
+          "upload",
+          "download",
+          "upload-multi",
+          "download-multi",
+          "hps",
+          "rps",
+          "latency",
+          "network-wan-loss-download",
+          "network-wan-reorder-rps",
+          "network-longhaul-bbr-latency"
+        ],
+        "regressionBaseline": "KNSoft-None",
+        "allowedRegressionPercent": 2.0,
+        "aggregateComparisons": [
+          {
+            "group": "EmulatedNetwork",
+            "scenarioCount": 3,
+            "deltaPercent": 0.941,
+            "worstScenario": "network-wan-reorder-rps",
+            "worstScenarioDeltaPercent": -0.036
+          },
+          {
+            "group": "Local",
+            "scenarioCount": 7,
+            "deltaPercent": 1.654,
+            "worstScenario": "download",
+            "worstScenarioDeltaPercent": -3.365
+          }
+        ],
+        "passed": true
+      }
+    }
+  ]
+}
