@@ -629,17 +629,20 @@ function Test-Performance(
     foreach ($TestCase in $TestCases) {
         $Scenario = $TestCase.Scenario
         if ($null -ne $TestCase.NetworkProfile) {
-            $Seed = $BaseRandomSeed + (128 + $NetworkCaseIndex++).ToString("x2")
-            $null = Set-DuoNicProfile $TestCase.NetworkProfile $Seed
+            $NetworkSeedOffset = 16 * $NetworkCaseIndex++
             $CaseVariants = @($Variants.GetEnumerator() |
                 Where-Object Key -in @("KNSoft-Custom", "KNSoft-None", "Upstream-MsQuic"))
         } else {
+            $NetworkSeedOffset = $null
             $CaseVariants = @($Variants.GetEnumerator())
         }
 
         foreach ($Variant in $CaseVariants) {
             Write-Host "Warmup $Arch/$Crt/$($TestCase.Name)/$($Variant.Key)"
             $WarmupDirectory = Join-Path $TempRoot "Results\$Arch\$Crt\runs\$($TestCase.Name)\$($Variant.Key)\warmup"
+            if ($null -ne $NetworkSeedOffset) {
+                $null = Set-DuoNicProfile $TestCase.NetworkProfile ($BaseRandomSeed + $NetworkSeedOffset.ToString("x2"))
+            }
             $null = Invoke-Workload $RunDirectories[$Variant.Key] $Scenario $TestCase.Network ([int]$Validation.durationSeconds) $WarmupDirectory
         }
 
@@ -651,6 +654,10 @@ function Test-Performance(
             foreach ($Variant in $Order) {
                 Write-Host "Benchmark $Arch/$Crt/$($TestCase.Name)/$($Variant.Key) ($Iteration/$($Validation.iterations))"
                 $OutputDirectory = Join-Path $TempRoot "Results\$Arch\$Crt\runs\$($TestCase.Name)\$($Variant.Key)\run-$Iteration"
+                if ($null -ne $NetworkSeedOffset) {
+                    $Seed = $BaseRandomSeed + ($NetworkSeedOffset + $Iteration).ToString("x2")
+                    $null = Set-DuoNicProfile $TestCase.NetworkProfile $Seed
+                }
                 $Result = Invoke-Workload $RunDirectories[$Variant.Key] $Scenario $TestCase.Network ([int]$Validation.durationSeconds) $OutputDirectory
                 $Results += [pscustomobject]@{
                     Architecture = $Arch
