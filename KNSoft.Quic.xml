@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Rule Name="KNSoftQuic"
+      DisplayName="KNSoft.Quic"
+      PageTemplate="generic"
+      Order="10"
+      xmlns="http://schemas.microsoft.com/build/2009/properties">
+  <Rule.Categories>
+    <Category Name="General" DisplayName="General" />
+  </Rule.Categories>
+
+  <Rule.DataSource>
+    <DataSource Persistence="ProjectFile" HasConfigurationCondition="true" />
+  </Rule.DataSource>
+
+  <EnumProperty Name="KNSoftQuicIntegration"
+                DisplayName="Integration Mode"
+                Description="Select how KNSoft.Quic is added to this configuration."
+                Category="General">
+    <EnumValue Name="None"
+               DisplayName="None"
+               Description="Do not add KNSoft.Quic headers, libraries, or runtime files." />
+    <EnumValue Name="Manual"
+               DisplayName="Manual"
+               Description="Add the header and library search paths without selecting a library." />
+    <EnumValue Name="DynamicMT"
+               DisplayName="DLL MT"
+               Description="Link the import library and copy the /MT KNSoft.Quic DLL to the output directory." />
+    <EnumValue Name="DynamicMD"
+               DisplayName="DLL MD"
+               Description="Link the import library and copy the /MD KNSoft.Quic DLL to the output directory." />
+    <EnumValue Name="Static"
+               DisplayName="Static"
+               Description="Link the regular static library." />
+    <EnumValue Name="StaticLTCG"
+               DisplayName="Static LTCG"
+               Description="Link the toolset-specific LTCG static library without changing the caller's PGO settings." />
+    <EnumValue Name="StaticLTCGPGO"
+               DisplayName="Static LTCG + Bundled PGO"
+               Description="Link the toolset-specific LTCG static library and use the bundled read-only PGO profile unless the caller explicitly configures linker PGO." />
+  </EnumProperty>
+</Rule>

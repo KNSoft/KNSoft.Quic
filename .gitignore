@@ -1,0 +1,11 @@
+.vs
+*.user
+*.aps
+
+/packages
+/OutDir
+IntDir
+/PGO/**/pgc
+/PGO/Temp
+
+/*.nupkg

@@ -1,0 +1,232 @@
+{
+  "schemaVersion": 1,
+  "generatedAtUtc": "2026-07-24T10:37:29.1225052Z",
+  "architecture": "arm64",
+  "tls": "Schannel",
+  "datapath": "Winsock/IOCP",
+  "host": {
+    "os": "Microsoft Windows 10.0.26200",
+    "architecture": "Arm64",
+    "processorCount": 4
+  },
+  "profiles": [
+    {
+      "runtime": "MT",
+      "configuration": "Release",
+      "pgd": "MT/KNSoft.Quic.pgd",
+      "pgdSize": 5050368,
+      "pgdSha256": "061a3ced01b85625e10f9882ebd7f710ef6eba6770e62a5174e2dddc8f473d8e",
+      "pgcCount": 80,
+      "generatedAtUtc": "2026-07-24T09:02:24.2388013Z",
+      "repositoryCommit": "0786c69f5c93f8d0a4265f388c4952d528ac5301",
+      "repositoryDirty": false,
+      "msquicCommit": "1739655ec833da2f338b61b8c904e147699246ab",
+      "msquicDirty": false,
+      "visualStudioVersion": "18.7.11925.98",
+      "vcToolsVersion": "14.51.36231",
+      "training": {
+        "localIterations": 5,
+        "localWeight": 1,
+        "scenarios": [
+          {
+            "name": "upload",
+            "preset": "upload",
+            "durationSeconds": 12,
+            "weight": 2
+          },
+          {
+            "name": "download",
+            "preset": "download",
+            "durationSeconds": 12,
+            "weight": 2
+          },
+          {
+            "name": "upload-multi",
+            "preset": "upload",
+            "durationSeconds": 12,
+            "connections": 4,
+            "streams": 8,
+            "weight": 2
+          },
+          {
+            "name": "download-multi",
+            "preset": "download",
+            "durationSeconds": 12,
+            "connections": 4,
+            "streams": 8,
+            "weight": 4
+          },
+          {
+            "name": "hps",
+            "preset": "hps",
+            "durationSeconds": 12,
+            "weight": 2
+          },
+          {
+            "name": "rps",
+            "preset": "rps",
+            "durationSeconds": 20
+          },
+          {
+            "name": "rps-multi",
+            "preset": "rps-multi",
+            "durationSeconds": 20
+          },
+          {
+            "name": "latency",
+            "preset": "latency",
+            "durationSeconds": 20
+          }
+        ],
+        "emulatedNetwork": {
+          "requestedMode": "Auto",
+          "enabled": false,
+          "weight": 0,
+          "runs": []
+        }
+      },
+      "buildValidation": {
+        "profiledFunctions": 1126,
+        "totalFunctions": 1128,
+        "profiledFunctionsPercent": 99.8,
+        "profiledInstructionsPercent": 100.0,
+        "dllSize": 391168,
+        "dllSha256": "eb0a92427ba9116b747daa5b9506f58b2c87e1558754772533af14c4474a697a"
+      },
+      "performanceValidation": {
+        "iterations": 11,
+        "durationSeconds": 5,
+        "scenarios": [
+          "upload",
+          "download",
+          "upload-multi",
+          "download-multi",
+          "hps",
+          "rps",
+          "latency"
+        ],
+        "regressionBaseline": "KNSoft-None",
+        "allowedRegressionPercent": 2.0,
+        "aggregateComparisons": [
+          {
+            "group": "Local",
+            "scenarioCount": 7,
+            "deltaPercent": 4.509,
+            "worstScenario": "hps",
+            "worstScenarioDeltaPercent": -0.648
+          }
+        ],
+        "passed": true
+      }
+    },
+    {
+      "runtime": "MD",
+      "configuration": "ReleaseMD",
+      "pgd": "MD/KNSoft.Quic.pgd",
+      "pgdSize": 5066752,
+      "pgdSha256": "0044850ec99fae22194deede7706ce298e176d305b8730a97e0c2fd644be9cbe",
+      "pgcCount": 80,
+      "generatedAtUtc": "2026-07-24T10:37:29.1225052Z",
+      "repositoryCommit": "0786c69f5c93f8d0a4265f388c4952d528ac5301",
+      "repositoryDirty": false,
+      "msquicCommit": "1739655ec833da2f338b61b8c904e147699246ab",
+      "msquicDirty": false,
+      "visualStudioVersion": "18.7.11925.98",
+      "vcToolsVersion": "14.51.36231",
+      "training": {
+        "localIterations": 5,
+        "localWeight": 1,
+        "scenarios": [
+          {
+            "name": "upload",
+            "preset": "upload",
+            "durationSeconds": 12,
+            "weight": 2
+          },
+          {
+            "name": "download",
+            "preset": "download",
+            "durationSeconds": 12,
+            "weight": 2
+          },
+          {
+            "name": "upload-multi",
+            "preset": "upload",
+            "durationSeconds": 12,
+            "connections": 4,
+            "streams": 8,
+            "weight": 2
+          },
+          {
+            "name": "download-multi",
+            "preset": "download",
+            "durationSeconds": 12,
+            "connections": 4,
+            "streams": 8,
+            "weight": 4
+          },
+          {
+            "name": "hps",
+            "preset": "hps",
+            "durationSeconds": 12,
+            "weight": 2
+          },
+          {
+            "name": "rps",
+            "preset": "rps",
+            "durationSeconds": 20
+          },
+          {
+            "name": "rps-multi",
+            "preset": "rps-multi",
+            "durationSeconds": 20
+          },
+          {
+            "name": "latency",
+            "preset": "latency",
+            "durationSeconds": 20
+          }
+        ],
+        "emulatedNetwork": {
+          "requestedMode": "Auto",
+          "enabled": false,
+          "weight": 0,
+          "runs": []
+        }
+      },
+      "buildValidation": {
+        "profiledFunctions": 1126,
+        "totalFunctions": 1128,
+        "profiledFunctionsPercent": 99.8,
+        "profiledInstructionsPercent": 100.0,
+        "dllSize": 294912,
+        "dllSha256": "f080a66fc6f9e579ba4fd640c87554898286fdeefe83de16ccb944e2899a3067"
+      },
+      "performanceValidation": {
+        "iterations": 11,
+        "durationSeconds": 5,
+        "scenarios": [
+          "upload",
+          "download",
+          "upload-multi",
+          "download-multi",
+          "hps",
+          "rps",
+          "latency"
+        ],
+        "regressionBaseline": "KNSoft-None",
+        "allowedRegressionPercent": 2.0,
+        "aggregateComparisons": [
+          {
+            "group": "Local",
+            "scenarioCount": 7,
+            "deltaPercent": 0.131,
+            "worstScenario": "download-multi",
+            "worstScenarioDeltaPercent": -6.325
+          }
+        ],
+        "passed": true
+      }
+    }
+  ]
+}

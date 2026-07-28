@@ -1,0 +1,88 @@
+<?xml version="1.0"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <PropertyPageSchema Include="$(MSBuildThisFileDirectory)KNSoft.Quic.xml" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <KNSoftQuicIntegration Condition="'$(KNSoftQuicIntegration)' == ''">Manual</KNSoftQuicIntegration>
+    <_KNSoftQuicConfiguration Condition="$(Configuration.Contains(`Debug`))">Debug</_KNSoftQuicConfiguration>
+    <_KNSoftQuicConfiguration Condition="$(Configuration.Contains(`Release`))">Release</_KNSoftQuicConfiguration>
+    <_KNSoftQuicIsLTCG Condition="'$(KNSoftQuicIntegration)' == 'StaticLTCG' or '$(KNSoftQuicIntegration)' == 'StaticLTCGPGO'">true</_KNSoftQuicIsLTCG>
+    <_KNSoftQuicMDSuffix Condition="'$(KNSoftQuicIntegration)' == 'DynamicMD'">MD</_KNSoftQuicMDSuffix>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(KNSoftQuicIntegration)' == 'Manual' or '$(KNSoftQuicIntegration)' == 'DynamicMT' or '$(KNSoftQuicIntegration)' == 'DynamicMD' or '$(KNSoftQuicIntegration)' == 'Static' or '$(KNSoftQuicIntegration)' == 'StaticLTCG' or '$(KNSoftQuicIntegration)' == 'StaticLTCGPGO'">
+    <IncludePath>$(MSBuildThisFileDirectory)Include;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(KNSoftQuicIntegration)' == 'Manual'">
+    <LibraryPath Condition="'$(_KNSoftQuicConfiguration)' != ''">$(MSBuildThisFileDirectory)Lib\$(Platform)\$(_KNSoftQuicConfiguration);$(LibraryPath)</LibraryPath>
+    <LibraryPath Condition="'$(_KNSoftQuicConfiguration)' == ''">$(MSBuildThisFileDirectory)Lib\$(Platform);$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+
+  <ItemDefinitionGroup>
+    <Link>
+      <AdditionalDependencies Condition="'$(KNSoftQuicIntegration)' == 'DynamicMT' or '$(KNSoftQuicIntegration)' == 'DynamicMD'">$(MSBuildThisFileDirectory)Lib\$(Platform)\$(_KNSoftQuicConfiguration)$(_KNSoftQuicMDSuffix)\KNSoft.Quic.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(KNSoftQuicIntegration)' == 'Static'">$(MSBuildThisFileDirectory)Lib\$(Platform)\$(_KNSoftQuicConfiguration)\KNSoft.Quic.Static.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(_KNSoftQuicIsLTCG)' == 'true'">$(MSBuildThisFileDirectory)Lib\$(Platform)\Release\KNSoft.Quic.Static.LTCG.$([System.Version]::Parse('$(VCToolsVersion)').ToString(2)).lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(_KNSoftQuicIsLTCG)' == 'true'">
+    <Link>
+      <LinkTimeCodeGeneration Condition="'%(LinkTimeCodeGeneration)' == '' or '%(LinkTimeCodeGeneration)' == 'Default'">UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+    </Link>
+  </ItemDefinitionGroup>
+  <Target Name="KNSoftQuicPreparePGD" BeforeTargets="Link" Condition="'$(KNSoftQuicIntegration)' == 'StaticLTCGPGO' and ('$(ConfigurationType)' == 'Application' or '$(ConfigurationType)' == 'DynamicLibrary')">
+    <PropertyGroup>
+      <_KNSoftQuicCallerPGO Condition="'$(WholeProgramOptimization)' == 'PGInstrument' or '$(WholeProgramOptimization)' == 'PGOptimize' or '$(WholeProgramOptimization)' == 'PGUpdate'">true</_KNSoftQuicCallerPGO>
+      <_KNSoftQuicPGD>$(IntDir)KNSoft.Quic.pgd</_KNSoftQuicPGD>
+    </PropertyGroup>
+    <ItemGroup>
+      <Link Condition="'$(_KNSoftQuicCallerPGO)' != 'true' and ('%(Link.LinkTimeCodeGeneration)' == '' or '%(Link.LinkTimeCodeGeneration)' == 'Default' or '%(Link.LinkTimeCodeGeneration)' == 'UseLinkTimeCodeGeneration' or '%(Link.LinkTimeCodeGeneration)' == 'UseFastLinkTimeCodeGeneration')">
+        <LinkTimeCodeGeneration>PGOptimization</LinkTimeCodeGeneration>
+      </Link>
+      <Link Condition="'$(_KNSoftQuicCallerPGO)' != 'true' and '%(Link.LinkTimeCodeGeneration)' == 'PGOptimization' and ('%(Link.ProfileGuidedDatabase)' == '' or '%(Link.ProfileGuidedDatabase)' == '$(OutDir)$(TargetName).pgd')">
+        <ProfileGuidedDatabase>$(_KNSoftQuicPGD)</ProfileGuidedDatabase>
+        <AdditionalOptions>%(Link.AdditionalOptions) /FORCE:PGOREPRO</AdditionalOptions>
+      </Link>
+    </ItemGroup>
+    <PropertyGroup>
+      <_KNSoftQuicUseBundledPGO Condition="'$(_KNSoftQuicCallerPGO)' != 'true' and '@(Link->AnyHaveMetadataValue('LinkTimeCodeGeneration', 'PGOptimization'))' == 'true' and '@(Link->AnyHaveMetadataValue('ProfileGuidedDatabase', '$(_KNSoftQuicPGD)'))' == 'true'">true</_KNSoftQuicUseBundledPGO>
+    </PropertyGroup>
+    <ItemGroup Condition="'$(_KNSoftQuicUseBundledPGO)' == 'true'">
+      <_KNSoftQuicDynamicRuntime Include="@(ClCompile)" Condition="'%(ClCompile.RuntimeLibrary)' != '' and $([System.String]::Copy('%(ClCompile.RuntimeLibrary)').ToUpperInvariant().Contains('DLL'))" />
+      <_KNSoftQuicStaticRuntime Include="@(ClCompile)" Condition="'%(ClCompile.RuntimeLibrary)' != '' and !$([System.String]::Copy('%(ClCompile.RuntimeLibrary)').ToUpperInvariant().Contains('DLL'))" />
+    </ItemGroup>
+    <PropertyGroup Condition="'$(_KNSoftQuicUseBundledPGO)' == 'true'">
+      <_KNSoftQuicRuntime Condition="'@(_KNSoftQuicDynamicRuntime)' != '' and '@(_KNSoftQuicStaticRuntime)' == ''">MD</_KNSoftQuicRuntime>
+      <_KNSoftQuicRuntime Condition="'@(_KNSoftQuicStaticRuntime)' != '' and '@(_KNSoftQuicDynamicRuntime)' == ''">MT</_KNSoftQuicRuntime>
+      <_KNSoftQuicPGDSource>$(MSBuildThisFileDirectory)Lib\$(Platform)\Release\KNSoft.Quic.Static.LTCG.$(_KNSoftQuicRuntime).pgd</_KNSoftQuicPGDSource>
+      <_KNSoftQuicPGDStateFile>$(_KNSoftQuicPGD).state</_KNSoftQuicPGDStateFile>
+    </PropertyGroup>
+    <ItemGroup Condition="'$(_KNSoftQuicUseBundledPGO)' == 'true'">
+      <_KNSoftQuicPGDInput Include="$(_KNSoftQuicPGDSource)" />
+    </ItemGroup>
+    <PropertyGroup Condition="'$(_KNSoftQuicUseBundledPGO)' == 'true'">
+      <_KNSoftQuicPGDState>$(_KNSoftQuicPGDSource)|@(_KNSoftQuicPGDInput->'%(ModifiedTime)')</_KNSoftQuicPGDState>
+    </PropertyGroup>
+    <Error Text="KNSoft.Quic bundled PGO requires one consistent C/C++ runtime library setting." Condition="'$(_KNSoftQuicUseBundledPGO)' == 'true' and '$(_KNSoftQuicRuntime)' == ''" />
+    <ReadLinesFromFile File="$(_KNSoftQuicPGDStateFile)" Condition="'$(_KNSoftQuicUseBundledPGO)' == 'true' and Exists('$(_KNSoftQuicPGDStateFile)')">
+      <Output TaskParameter="Lines" ItemName="_KNSoftQuicPreviousPGDState" />
+    </ReadLinesFromFile>
+    <PropertyGroup>
+      <_KNSoftQuicCopyPGD Condition="'$(_KNSoftQuicUseBundledPGO)' == 'true' and (!Exists('$(_KNSoftQuicPGDSource)') or !Exists('$(_KNSoftQuicPGD)') or '@(_KNSoftQuicPreviousPGDState)' != '$(_KNSoftQuicPGDState)')">true</_KNSoftQuicCopyPGD>
+    </PropertyGroup>
+    <Copy SourceFiles="$(_KNSoftQuicPGDSource)" DestinationFiles="$(_KNSoftQuicPGD)" Condition="'$(_KNSoftQuicCopyPGD)' == 'true'" />
+    <WriteLinesToFile File="$(_KNSoftQuicPGDStateFile)" Lines="$(_KNSoftQuicPGDState)" Overwrite="true" Condition="'$(_KNSoftQuicCopyPGD)' == 'true'" />
+    <ItemGroup Condition="'$(_KNSoftQuicUseBundledPGO)' == 'true'">
+      <FileWrites Include="$(_KNSoftQuicPGD);$(_KNSoftQuicPGDStateFile)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="KNSoftQuicCopyDLL" AfterTargets="Link" Condition="'$(KNSoftQuicIntegration)' == 'DynamicMT' or '$(KNSoftQuicIntegration)' == 'DynamicMD'">
+    <Copy SourceFiles="$(MSBuildThisFileDirectory)Bin\$(Platform)\$(_KNSoftQuicConfiguration)$(_KNSoftQuicMDSuffix)\KNSoft.Quic.dll" DestinationFiles="$(OutDir)KNSoft.Quic.dll" SkipUnchangedFiles="true" />
+    <ItemGroup>
+      <FileWrites Include="$(OutDir)KNSoft.Quic.dll" />
+    </ItemGroup>
+  </Target>
+</Project>
