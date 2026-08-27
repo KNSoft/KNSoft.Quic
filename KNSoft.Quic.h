@@ -3,14 +3,6 @@
 #define QUIC_API_ENABLE_INSECURE_FEATURES 1
 #define QUIC_API_ENABLE_PREVIEW_FEATURES 1
 
-#if defined(_DEBUG)
-#define QUIC_EVENTS_STDOUT 1
-#define QUIC_LOGS_STDOUT 1
-#else
-#define QUIC_EVENTS_STUB 1
-#define QUIC_LOGS_STUB 1
-#endif
-
 #include "msquic/src/inc/msquic.h"
 
 EXTERN_C_START

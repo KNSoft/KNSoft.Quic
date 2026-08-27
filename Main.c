@@ -6,13 +6,6 @@
 /* Patch precomp.h */
 #include "precomp.h"
 
-#if defined(_DEBUG)
-#pragma warning(push)
-#pragma warning(disable:4996) /* Upstream stdout helper uses strdup. */
-#include "msquic/src/generated/stdout/quic_trace.c"
-#pragma warning(pop)
-#endif
-
 #pragma include_alias("precomp.h", "../../../precomp.h")
 
 #pragma comment(lib, "advapi32.lib")
