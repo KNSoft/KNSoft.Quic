@@ -305,6 +305,10 @@
     <ClCompile>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)'=='DebugMD'">
     <ClCompile>
@@ -334,6 +338,8 @@
       <AdditionalDependencies>$(KNSoftQuicStaticLTCGLibrary);%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>$(ProjectName).def</ModuleDefinitionFile>
       <ProfileGuidedDatabase>$(IntDir)$(TargetName).pgd</ProfileGuidedDatabase>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
       <AdditionalOptions>/FORCE:PGOREPRO %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <Manifest>
