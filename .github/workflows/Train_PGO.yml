@@ -108,25 +108,25 @@ jobs:
         ref: main
         persist-credentials: false
     - name: Download x86 profiles
-      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
       with:
         pattern: KNSoft.Quic-PGO-x86-??
         path: PGO/x86
         merge-multiple: true
     - name: Download x64 profiles
-      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
       with:
         pattern: KNSoft.Quic-PGO-x64-??
         path: PGO/x64
         merge-multiple: true
     - name: Download ARM64 profiles
-      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
       with:
         pattern: KNSoft.Quic-PGO-arm64-??
         path: PGO/ARM64
         merge-multiple: true
     - name: Download ARM64EC profiles
-      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
       with:
         pattern: KNSoft.Quic-PGO-arm64ec-??
         path: PGO/ARM64EC
